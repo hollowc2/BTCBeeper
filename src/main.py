@@ -184,7 +184,7 @@ class BTCConnectionManager:
                 
             elif msg_type in ["match", "last_match"]:
                 # BTC Trade data
-                logger.info(f"Processing BTC trade: {data.get('price', 'N/A')} @ {data.get('size', 'N/A')}")
+                # logger.info(f"Processing BTC trade: {data.get('price', 'N/A')} @ {data.get('size', 'N/A')}")
                 
                 trade_data = BTCTradeData(
                     price=float(data["price"]),
@@ -199,7 +199,7 @@ class BTCConnectionManager:
                 self.btc_stats["volume_today"] += trade_data.size
                 self.btc_stats["last_price"] = trade_data.price
                 
-                logger.info(f"BTC trade processed: ${trade_data.price:.2f}, Total trades: {self.btc_stats['total_trades']}")
+                # logger.info(f"BTC trade processed: ${trade_data.price:.2f}, Total trades: {self.btc_stats['total_trades']}")
                 
                 await self.broadcast(json.dumps({
                     "type": "btc_trade",
@@ -208,7 +208,7 @@ class BTCConnectionManager:
                 
             elif msg_type == "ticker":
                 # BTC Ticker data
-                logger.info(f"Processing BTC ticker: {data.get('price', 'N/A')}")
+                # logger.info(f"Processing BTC ticker: {data.get('price', 'N/A')}")
                 
                 ticker_data = BTCTickerData(
                     price=float(data["price"]),
@@ -224,7 +224,7 @@ class BTCConnectionManager:
                 if self.btc_stats["last_price"] > 0:
                     self.btc_stats["price_change_24h"] = ((ticker_data.price - ticker_data.low_24h) / ticker_data.low_24h) * 100
                 
-                logger.info(f"BTC ticker processed: ${ticker_data.price:.2f}")
+                # logger.info(f"BTC ticker processed: ${ticker_data.price:.2f}")
                 
                 await self.broadcast(json.dumps({
                     "type": "btc_ticker",

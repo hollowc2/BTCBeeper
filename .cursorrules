@@ -1,0 +1,36 @@
+Ask AI
+---
+description: Improve commit messages and Python code quality for financial data project
+alwaysApply: true
+---
+
+# Commit Message Strategy
+- After implementing a fix or new feature, help me write a **concise, informative commit message**.
+- Use **Conventional Commits** style:
+  - `fix(module): what was fixed (impact: effect)`
+  - `feat(module): what was added (added: new functions)`
+- Summarize what changed:
+  - Module / file names
+  - Short human-readable summary
+  - Impact or purpose
+- Keep commit messages **under 100 characters** when possible.
+
+## Examples
+- `fix(pricing): handle edge case when option expires intraday (impact: prevents crash)`
+- `feat(loader): add support for Polygon.io historic trades (added: load_trades_from_polygon)`
+
+# Python Quality
+- Enforce PEP8 formatting and type hints where practical.
+- Prefer explicit, descriptive variable names (e.g., `option_chain`, `historical_volatility`).
+- Include docstrings for all public functions and classes.
+- Add simple inline comments explaining financial domain logic, especially non-obvious calculations.
+- When adding data loaders, always include:
+  - Input data format
+  - Expected data shape
+  - Source (e.g., Polygon.io, local CSV)
+
+
+
+# Git Workflow
+- Use short, focused commits rather than batching unrelated changes.
+- If commit fixes a bug linked to an issue, include issue number: `fix(module): description (#123)`
