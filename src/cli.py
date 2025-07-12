@@ -88,8 +88,27 @@ class BTCBeeperApp(App):
         color: $text-muted;
         padding: 0 1;
     }
+    #bot-banner {
+        dock: bottom;
+        height: 2;
+        background: yellow;
+        color: black;
+        text-align: center;
+        content-align: center middle;
+        padding: 0 1;
+        visibility: hidden;
+    }
+    #bot-banner.active {
+        visibility: visible;
+        background: orange;
+        color: black;
+    }
     """
     BINDINGS = [ ("a", "toggle_audio", "Toggle Audio") ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.bot_banner_timer = None
 
     def compose(self) -> ComposeResult:
         self.price_widget = PriceWidget(id="price")
@@ -99,7 +118,8 @@ class BTCBeeperApp(App):
         self.trades_table = DataTable(id="trades")
         self.trades_table.add_columns("Side", "Price", "Size (BTC)")
         yield self.trades_table
-        
+        self.bot_banner = Static("", id="bot-banner")
+        yield self.bot_banner
 
     async def on_mount(self) -> None:
         self.set_interval(0.5, self.refresh_stats)
@@ -180,6 +200,38 @@ class BTCBeeperApp(App):
         self.trades_table.clear()
         for trade in reversed(recent_trades[-10:]):
             self.trades_table.add_row(trade['side'].capitalize(), f"${trade['price']:.2f}", f"{trade['size']:.6f}")
+        # Bot detection: 5+ trades of nearly identical size in last 10 trades
+        size_counts = {}
+        size_to_prices = {}
+        for trade in recent_trades[-10:]:
+            rounded_size = round(trade['size'], 4)
+            size_counts[rounded_size] = size_counts.get(rounded_size, 0) + 1
+            if rounded_size not in size_to_prices:
+                size_to_prices[rounded_size] = []
+            size_to_prices[rounded_size].append(trade['price'])
+        likely_bot = any(count >= 5 for count in size_counts.values())
+        if likely_bot:
+            # Find the most common repeated size
+            repeated_size = max(size_counts, key=lambda k: size_counts[k] if size_counts[k] >= 5 else 0)
+            # Get the most recent price for that size
+            price_list = size_to_prices[repeated_size]
+            repeated_price = price_list[-1] if price_list else stats['last_price']
+            self.bot_banner.update(f"[bold]⚠️  Possible bot activity: 5+ trades of {repeated_size} BTC @ ${repeated_price:,.2f} in last 10! ⚠️[/bold]")
+            self.bot_banner.add_class("active")
+            # Set a timer to hide the banner after 5 seconds
+            if hasattr(self, 'bot_banner_timer') and self.bot_banner_timer:
+                self.bot_banner_timer.stop()
+            self.bot_banner_timer = self.set_timer(5, self.hide_bot_banner)
+        else:
+            self.bot_banner.update("")
+            self.bot_banner.remove_class("active")
+            if hasattr(self, 'bot_banner_timer') and self.bot_banner_timer:
+                self.bot_banner_timer.stop()
+                self.bot_banner_timer = None
+
+    def hide_bot_banner(self):
+        self.bot_banner.update("")
+        self.bot_banner.remove_class("active")
 
 if __name__ == "__main__":
     os.system("clear" if os.name == "posix" else "cls")
