@@ -104,11 +104,17 @@ class BTCBeeperApp(App):
         color: black;
     }
     """
-    BINDINGS = [ ("a", "toggle_audio", "Toggle Audio") ]
+    FILTER_SIZES = [0.0001, 0.001, 0.01, 0.1, 1]
+    BINDINGS = [
+        ("a", "toggle_audio", "Toggle Audio"),
+        ("[", "filter_down", "Decrease Min Trade Size"),
+        ("]", "filter_up", "Increase Min Trade Size"),
+    ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.bot_banner_timer = None
+        self.filter_index = 0  # Start with the smallest filter
 
     def compose(self) -> ComposeResult:
         self.price_widget = PriceWidget(id="price")
@@ -137,6 +143,9 @@ class BTCBeeperApp(App):
                         msg_type = data.get("type")
                         payload = data.get("data", {})
                         if msg_type == "btc_trade":
+                            min_trade_size = self.get_min_trade_size()
+                            if payload["size"] < min_trade_size:
+                                continue  # Ignore trades below filter for all stats/audio
                             stats["total_trades"] += 1
                             prev_price = stats["last_price"]
                             stats["last_price"] = payload["price"]
@@ -179,7 +188,21 @@ class BTCBeeperApp(App):
         audio_enabled = not audio_enabled
         self.refresh_stats()
 
+    def action_filter_down(self):
+        if self.filter_index > 0:
+            self.filter_index -= 1
+            self.refresh_stats()
+
+    def action_filter_up(self):
+        if self.filter_index < len(self.FILTER_SIZES) - 1:
+            self.filter_index += 1
+            self.refresh_stats()
+
+    def get_min_trade_size(self):
+        return self.FILTER_SIZES[self.filter_index]
+
     def refresh_stats(self):
+        min_trade_size = self.get_min_trade_size()
         # Update price widget
         self.price_widget.update_price(stats['last_price'])
         # Update stats widget
@@ -190,20 +213,23 @@ class BTCBeeperApp(App):
             f"Trades/sec (TPS): {stats['tps']:.2f}",
             f"Highest TPS: {stats['highest_tps']:.2f}",
             f"Avg Trade Size: {stats['avg_trade_size']:.6f} BTC",
+            f"Min Trade Size: {min_trade_size} BTC (press [ or ] to adjust)",
         ]
         if stats['largest_trade']:
             lt = stats['largest_trade']
             lines.append(f"Largest Trade: {lt['side'].capitalize()} {lt['size']:.6f} BTC @ ${lt['price']:.2f}")
         lines.append(f"Audio: {'ON' if audio_enabled else 'OFF'} (press 'a' to toggle)")
         self.stats_widget.update("\n".join(lines))
+        # Filter trades for table and bot detection
+        filtered_trades = [t for t in recent_trades[-100:] if t['size'] >= min_trade_size]
         # Update trades table
         self.trades_table.clear()
-        for trade in reversed(recent_trades[-10:]):
+        for trade in reversed(filtered_trades[-10:]):
             self.trades_table.add_row(trade['side'].capitalize(), f"${trade['price']:.2f}", f"{trade['size']:.6f}")
-        # Bot detection: 5+ trades of nearly identical size in last 10 trades
+        # Bot detection: 5+ trades of nearly identical size in last 10 filtered trades
         size_counts = {}
         size_to_prices = {}
-        for trade in recent_trades[-10:]:
+        for trade in filtered_trades[-10:]:
             rounded_size = round(trade['size'], 4)
             size_counts[rounded_size] = size_counts.get(rounded_size, 0) + 1
             if rounded_size not in size_to_prices:
@@ -211,14 +237,11 @@ class BTCBeeperApp(App):
             size_to_prices[rounded_size].append(trade['price'])
         likely_bot = any(count >= 5 for count in size_counts.values())
         if likely_bot:
-            # Find the most common repeated size
             repeated_size = max(size_counts, key=lambda k: size_counts[k] if size_counts[k] >= 5 else 0)
-            # Get the most recent price for that size
             price_list = size_to_prices[repeated_size]
             repeated_price = price_list[-1] if price_list else stats['last_price']
             self.bot_banner.update(f"[bold]⚠️  Possible bot activity: 5+ trades of {repeated_size} BTC @ ${repeated_price:,.2f} in last 10! ⚠️[/bold]")
             self.bot_banner.add_class("active")
-            # Set a timer to hide the banner after 5 seconds
             if hasattr(self, 'bot_banner_timer') and self.bot_banner_timer:
                 self.bot_banner_timer.stop()
             self.bot_banner_timer = self.set_timer(5, self.hide_bot_banner)
