@@ -314,10 +314,23 @@ class BTCConnectionManager:
             "best_ask": asks[0][0] if asks else 0
         }
 
+    def get_btc_order_book_stats(self):
+        """Get current BTC order book statistics"""
+        bids = sorted(self.btc_order_book["bids"].items(), reverse=True)
+        asks = sorted(self.btc_order_book["asks"].items())
+
+        return {
+            "spread": asks[0][0] - bids[0][0] if bids and asks else 0,
+            "bid_depth": sum(size for _, size in bids[:10]),
+            "ask_depth": sum(size for _, size in asks[:10]),
+            "total_bids": len(bids),
+            "total_asks": len(asks),
+            "best_bid": bids[0][0] if bids else 0,
+            "best_ask": asks[0][0] if asks else 0
+        }
+
     def get_btc_stats(self):
         """Get current BTC trading statistics"""
-    def get_btc_order_book_stats(self):
-
         return {
             **self.btc_stats,
             "order_book": self.get_btc_order_book_stats()
