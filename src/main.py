@@ -114,7 +114,7 @@ class BTCConnectionManager:
     async def start_btc_connection(self, channels: List[str] = None):
         """Start BTC-only connection to Coinbase"""
         if channels is None:
-            channels = ["matches", "ticker", "heartbeat"]  # Removed level2 - requires auth
+            channels = ["matches", "ticker", "heartbeat", "level2"]  # Removed level2 - requires auth
         
         if self.is_connected:
             return

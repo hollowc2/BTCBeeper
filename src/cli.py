@@ -2,12 +2,13 @@ import asyncio
 import json
 import os
 import websockets
-from rich.live import Live
-from rich.table import Table
-from rich import box
 import pygame
 import time
-import threading
+from textual.app import App, ComposeResult
+from textual.widgets import Static, DataTable
+from textual.reactive import reactive
+from textual import events
+from textual.timer import Timer
 
 # Path to your click sound
 CLICK_SOUND_PATH = "data/sounds/geiger_click7.wav"
@@ -32,138 +33,162 @@ trade_timestamps = []  # For TPS calculation
 TPS_WINDOW = 10  # seconds
 
 audio_enabled = True
-last_heartbeat = None
-connection_status = "disconnected"
+click_sound = None
 
-order_book = None  # No longer used
+class PriceWidget(Static):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_price = None
+        self.anim_timer: Timer | None = None
 
-# For keypress listening (audio toggle)
-def listen_for_keys():
-    global audio_enabled
-    try:
-        import termios, tty, sys, select
-        fd = sys.stdin.fileno()
-        old_settings = termios.tcgetattr(fd)
-        tty.setcbreak(fd)
-        while True:
-            if select.select([sys.stdin], [], [], 0.1)[0]:
-                ch = sys.stdin.read(1)
-                if ch.lower() == 'a':
-                    audio_enabled = not audio_enabled
-    except Exception:
-        pass
-    finally:
-        try:
-            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-        except Exception:
-            pass
+    def update_price(self, price: float):
+        # Format price large and centered (markup only uses supported tags)
+        self.update(f"\n[bold bright_white on black]BTC/USD[/]\n\n[bold bright_yellow on black]${price:,.2f}[/]")
 
-def make_table():
-    """Create a rich Table for live display."""
-    table = Table(title="📈 BTC CLI Visualizer", box=box.SIMPLE_HEAVY)
-    table.add_column("Metric", justify="right")
-    table.add_column("Value", justify="left")
+    def animate(self, direction: str):
+        # direction: 'up' or 'down'
+        if direction == 'up':
+            self.add_class('price-up')
+        elif direction == 'down':
+            self.add_class('price-down')
+        if self.anim_timer:
+            self.anim_timer.stop()
+        self.anim_timer = self.set_timer(0.5, self.reset_animation)
 
-    table.add_row("Last Price", f"${stats['last_price']:.2f}")
-    table.add_row("Total Trades", str(stats['total_trades']))
-    table.add_row("Volume Today", f"{stats['volume_today']:.6f} BTC")
-    table.add_row("24h Change", f"{stats['price_change_24h']:.2f}%")
-    table.add_row("Trades/sec (TPS)", f"{stats['tps']:.2f}")
-    table.add_row("Highest TPS", f"{stats['highest_tps']:.2f}")
-    table.add_row("Avg Trade Size", f"{stats['avg_trade_size']:.6f} BTC")
-    if stats['largest_trade']:
-        lt = stats['largest_trade']
-        table.add_row("Largest Trade", f"{lt['side'].capitalize()} {lt['size']:.6f} BTC @ ${lt['price']:.2f}")
-    table.add_section()
-    table.add_row("[bold]Recent Trades (10)[/bold]", "")
-    for trade in reversed(recent_trades[-10:]):
-        price = f"${trade['price']:.2f}"
-        size = f"{trade['size']:.6f} BTC"
-        side = trade["side"]
-        table.add_row(f"{side.capitalize()} @ {price}", size)
-    return table
+    def reset_animation(self):
+        self.remove_class('price-up')
+        self.remove_class('price-down')
 
-async def play_click():
-    """Play click sound using pygame."""
-    if audio_enabled and os.path.exists(CLICK_SOUND_PATH) and click_sound:
-        click_sound.play()
+class BTCBeeperApp(App):
+    CSS = """
+    #price {
+        align: center middle;
+        height: 6;
+        content-align: center middle;
+        text-align: center;
+        padding: 1 0;
+    }
+    .price-up {
+        background: green;
+        color: black;
+        transition: background 200ms, color 200ms;
+    }
+    .price-down {
+        background: red;
+        color: white;
+        transition: background 200ms, color 200ms;
+    }
+    #stats {
+        padding: 0 1;
+    }
+    #trades {
+        padding: 0 1;
+    }
+    #footer {
+        color: $text-muted;
+        padding: 0 1;
+    }
+    """
+    BINDINGS = [ ("a", "toggle_audio", "Toggle Audio") ]
 
-def update_tps():
-    now = time.time()
-    # Remove timestamps outside the window
-    while trade_timestamps and now - trade_timestamps[0] > TPS_WINDOW:
-        trade_timestamps.pop(0)
-    stats['tps'] = len(trade_timestamps) / TPS_WINDOW
-    if stats['tps'] > stats['highest_tps']:
-        stats['highest_tps'] = stats['tps']
+    def compose(self) -> ComposeResult:
+        self.price_widget = PriceWidget(id="price")
+        yield self.price_widget
+        self.stats_widget = Static(id="stats")
+        yield self.stats_widget
+        self.trades_table = DataTable(id="trades")
+        self.trades_table.add_columns("Side", "Price", "Size (BTC)")
+        yield self.trades_table
+        
 
-async def run_cli():
-    global stats, recent_trades
-    try:
-        async with websockets.connect(WS_URL) as websocket:
-            with Live(make_table(), refresh_per_second=5) as live:
-                while True:
-                    try:
+    async def on_mount(self) -> None:
+        self.set_interval(0.5, self.refresh_stats)
+        await self.connect_ws()
+        self.last_price = None
+
+    async def connect_ws(self):
+        async def ws_loop():
+            global stats, recent_trades
+            try:
+                async with websockets.connect(WS_URL) as websocket:
+                    while True:
                         message = await websocket.recv()
                         data = json.loads(message)
                         msg_type = data.get("type")
                         payload = data.get("data", {})
-
                         if msg_type == "btc_trade":
                             stats["total_trades"] += 1
+                            prev_price = stats["last_price"]
                             stats["last_price"] = payload["price"]
                             stats["volume_today"] += payload["size"]
                             recent_trades.append(payload)
-                            # TPS
                             trade_timestamps.append(time.time())
-                            update_tps()
-                            # Avg trade size
+                            self.update_tps()
                             stats["avg_trade_size"] = stats["volume_today"] / stats["total_trades"] if stats["total_trades"] else 0.0
-                            # Largest trade
                             if not stats["largest_trade"] or payload["size"] > stats["largest_trade"]["size"]:
                                 stats["largest_trade"] = payload.copy()
-                            await play_click()
-
+                            await self.play_click()
+                            # Animate price if changed
+                            if prev_price is not None:
+                                if stats["last_price"] > prev_price:
+                                    self.price_widget.animate('up')
+                                elif stats["last_price"] < prev_price:
+                                    self.price_widget.animate('down')
                         elif msg_type == "btc_ticker":
                             stats["last_price"] = payload["price"]
                             stats["price_change_24h"] = payload.get("price_change_24h", stats["price_change_24h"])
-                        # Remove order book and connection/heartbeat logic
-                        live.update(make_table())
+                        self.refresh_stats()
+            except Exception as e:
+                self.stats_widget.update(f"[Connection Error]: {e}")
+        self.run_worker(ws_loop, exclusive=True)
 
-                    except asyncio.CancelledError:
-                        # Clean exit on cancellation
-                        break
-                    except Exception as e:
-                        print(f"[Error]: {e}")
-                        break
-    except asyncio.CancelledError:
-        # Clean exit on cancellation
-        pass
-    except Exception as e:
-        print(f"[Connection Error]: {e}")
-        connection_status = "disconnected"
+    def update_tps(self):
+        now = time.time()
+        while trade_timestamps and now - trade_timestamps[0] > TPS_WINDOW:
+            trade_timestamps.pop(0)
+        stats['tps'] = len(trade_timestamps) / TPS_WINDOW
+        if stats['tps'] > stats['highest_tps']:
+            stats['highest_tps'] = stats['tps']
+
+    async def play_click(self):
+        if audio_enabled and click_sound:
+            click_sound.play()
+
+    def action_toggle_audio(self):
+        global audio_enabled
+        audio_enabled = not audio_enabled
+        self.refresh_stats()
+
+    def refresh_stats(self):
+        # Update price widget
+        self.price_widget.update_price(stats['last_price'])
+        # Update stats widget
+        lines = [
+            f"Total Trades: {stats['total_trades']}",
+            f"Volume Today: {stats['volume_today']:.6f} BTC",
+            f"24h Change: {stats['price_change_24h']:.2f}%",
+            f"Trades/sec (TPS): {stats['tps']:.2f}",
+            f"Highest TPS: {stats['highest_tps']:.2f}",
+            f"Avg Trade Size: {stats['avg_trade_size']:.6f} BTC",
+        ]
+        if stats['largest_trade']:
+            lt = stats['largest_trade']
+            lines.append(f"Largest Trade: {lt['side'].capitalize()} {lt['size']:.6f} BTC @ ${lt['price']:.2f}")
+        lines.append(f"Audio: {'ON' if audio_enabled else 'OFF'} (press 'a' to toggle)")
+        self.stats_widget.update("\n".join(lines))
+        # Update trades table
+        self.trades_table.clear()
+        for trade in reversed(recent_trades[-10:]):
+            self.trades_table.add_row(trade['side'].capitalize(), f"${trade['price']:.2f}", f"{trade['size']:.6f}")
 
 if __name__ == "__main__":
-    # Clear the terminal before starting
     os.system("clear" if os.name == "posix" else "cls")
-    print("Starting BTC CLI Visualizer...")
+    print("Starting BTC CLI Visualizer (Textual)...")
     print("Press Ctrl+C to exit. Press 'a' to toggle audio.")
-
-    # Initialize pygame mixer once
     pygame.mixer.init()
     if os.path.exists(CLICK_SOUND_PATH):
         click_sound = pygame.mixer.Sound(CLICK_SOUND_PATH)
     else:
         click_sound = None
         print("Warning: click sound file not found!")
-
-    # Start keypress listener in a thread
-    key_thread = threading.Thread(target=listen_for_keys, daemon=True)
-    key_thread.start()
-
-    try:
-        asyncio.run(run_cli())
-    except KeyboardInterrupt:
-        print("\nExiting cleanly. Goodbye!")
-    finally:
-        pygame.mixer.quit()
+    BTCBeeperApp().run()
