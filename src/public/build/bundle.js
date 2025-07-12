@@ -469,7 +469,7 @@ var app = (function () {
     	return child_ctx;
     }
 
-    // (270:10) {:else}
+    // (271:10) {:else}
     function create_else_block_1(ctx) {
     	let t;
 
@@ -490,14 +490,14 @@ var app = (function () {
     		block,
     		id: create_else_block_1.name,
     		type: "else",
-    		source: "(270:10) {:else}",
+    		source: "(271:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (268:10) {#if isConnected}
+    // (269:10) {#if isConnected}
     function create_if_block_4(ctx) {
     	let t0;
     	let t1_value = /*getConnectionStatus*/ ctx[14]() + "";
@@ -527,14 +527,14 @@ var app = (function () {
     		block,
     		id: create_if_block_4.name,
     		type: "if",
-    		source: "(268:10) {#if isConnected}",
+    		source: "(269:10) {#if isConnected}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (274:8) {#if lastHeartbeat}
+    // (275:8) {#if lastHeartbeat}
     function create_if_block_3(ctx) {
     	let span;
     	let t0;
@@ -547,7 +547,7 @@ var app = (function () {
     			t0 = text("Last heartbeat: ");
     			t1 = text(t1_value);
     			attr_dev(span, "class", "heartbeat-time svelte-94kqpu");
-    			add_location(span, file, 274, 10, 7389);
+    			add_location(span, file, 275, 10, 7333);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, span, anchor);
@@ -566,14 +566,14 @@ var app = (function () {
     		block,
     		id: create_if_block_3.name,
     		type: "if",
-    		source: "(274:8) {#if lastHeartbeat}",
+    		source: "(275:8) {#if lastHeartbeat}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (297:10) {:else}
+    // (298:10) {:else}
     function create_else_block(ctx) {
     	let t;
 
@@ -593,14 +593,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(297:10) {:else}",
+    		source: "(298:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (295:46) 
+    // (296:46) 
     function create_if_block_2(ctx) {
     	let t;
 
@@ -620,14 +620,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(295:46) ",
+    		source: "(296:46) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (293:10) {#if priceDirection === 'up'}
+    // (294:10) {#if priceDirection === 'up'}
     function create_if_block_1(ctx) {
     	let t;
 
@@ -647,14 +647,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(293:10) {#if priceDirection === 'up'}",
+    		source: "(294:10) {#if priceDirection === 'up'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (330:6) {#if largestTrade}
+    // (331:6) {#if largestTrade}
     function create_if_block(ctx) {
     	let div3;
     	let div0;
@@ -698,19 +698,19 @@ var app = (function () {
     			span2 = element("span");
     			t9 = text(t9_value);
     			attr_dev(div0, "class", "stat-label svelte-94kqpu");
-    			add_location(div0, file, 331, 8, 9329);
+    			add_location(div0, file, 332, 8, 9273);
     			attr_dev(div1, "class", "stat-value svelte-94kqpu");
-    			add_location(div1, file, 332, 8, 9381);
+    			add_location(div1, file, 333, 8, 9325);
     			attr_dev(span0, "class", "trade-side svelte-94kqpu");
-    			add_location(span0, file, 334, 10, 9492);
+    			add_location(span0, file, 335, 10, 9436);
     			attr_dev(span1, "class", "trade-price");
-    			add_location(span1, file, 335, 10, 9568);
+    			add_location(span1, file, 336, 10, 9512);
     			attr_dev(span2, "class", "trade-time");
-    			add_location(span2, file, 336, 10, 9645);
+    			add_location(span2, file, 337, 10, 9589);
     			attr_dev(div2, "class", "stat-details svelte-94kqpu");
-    			add_location(div2, file, 333, 8, 9455);
+    			add_location(div2, file, 334, 8, 9399);
     			attr_dev(div3, "class", div3_class_value = "stat-card largest-trade-card " + /*largestTrade*/ ctx[6].side + " svelte-94kqpu");
-    			add_location(div3, file, 330, 6, 9258);
+    			add_location(div3, file, 331, 6, 9202);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div3, anchor);
@@ -749,14 +749,14 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(330:6) {#if largestTrade}",
+    		source: "(331:6) {#if largestTrade}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (373:12) {#each orderBook.bids as [price, size]}
+    // (374:12) {#each orderBook.bids as [price, size]}
     function create_each_block_2(ctx) {
     	let div;
     	let span0;
@@ -778,11 +778,11 @@ var app = (function () {
     			t2 = text(t2_value);
     			t3 = space();
     			attr_dev(span0, "class", "order-price");
-    			add_location(span0, file, 374, 16, 11021);
+    			add_location(span0, file, 375, 16, 10965);
     			attr_dev(span1, "class", "order-size");
-    			add_location(span1, file, 375, 16, 11103);
+    			add_location(span1, file, 376, 16, 11047);
     			attr_dev(div, "class", "order-row bid svelte-94kqpu");
-    			add_location(div, file, 373, 14, 10977);
+    			add_location(div, file, 374, 14, 10921);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -806,14 +806,14 @@ var app = (function () {
     		block,
     		id: create_each_block_2.name,
     		type: "each",
-    		source: "(373:12) {#each orderBook.bids as [price, size]}",
+    		source: "(374:12) {#each orderBook.bids as [price, size]}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (385:12) {#each orderBook.asks as [price, size]}
+    // (386:12) {#each orderBook.asks as [price, size]}
     function create_each_block_1(ctx) {
     	let div;
     	let span0;
@@ -835,11 +835,11 @@ var app = (function () {
     			t2 = text(t2_value);
     			t3 = space();
     			attr_dev(span0, "class", "order-price");
-    			add_location(span0, file, 386, 16, 11460);
+    			add_location(span0, file, 387, 16, 11404);
     			attr_dev(span1, "class", "order-size");
-    			add_location(span1, file, 387, 16, 11542);
+    			add_location(span1, file, 388, 16, 11486);
     			attr_dev(div, "class", "order-row ask svelte-94kqpu");
-    			add_location(div, file, 385, 14, 11416);
+    			add_location(div, file, 386, 14, 11360);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -863,14 +863,14 @@ var app = (function () {
     		block,
     		id: create_each_block_1.name,
     		type: "each",
-    		source: "(385:12) {#each orderBook.asks as [price, size]}",
+    		source: "(386:12) {#each orderBook.asks as [price, size]}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (399:8) {#each trades.slice(0, 10) as trade}
+    // (400:8) {#each trades.slice(0, 10) as trade}
     function create_each_block(ctx) {
     	let div;
     	let span0;
@@ -909,15 +909,15 @@ var app = (function () {
     			t7 = text(t7_value);
     			t8 = space();
     			attr_dev(span0, "class", "trade-side svelte-94kqpu");
-    			add_location(span0, file, 400, 12, 11906);
+    			add_location(span0, file, 401, 12, 11850);
     			attr_dev(span1, "class", "trade-size");
-    			add_location(span1, file, 401, 12, 11977);
+    			add_location(span1, file, 402, 12, 11921);
     			attr_dev(span2, "class", "trade-price");
-    			add_location(span2, file, 402, 12, 12050);
+    			add_location(span2, file, 403, 12, 11994);
     			attr_dev(span3, "class", "trade-time");
-    			add_location(span3, file, 403, 12, 12122);
+    			add_location(span3, file, 404, 12, 12066);
     			attr_dev(div, "class", div_class_value = "trade-item " + /*trade*/ ctx[29].side + " svelte-94kqpu");
-    			add_location(div, file, 399, 10, 11856);
+    			add_location(div, file, 400, 10, 11800);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -954,7 +954,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(399:8) {#each trades.slice(0, 10) as trade}",
+    		source: "(400:8) {#each trades.slice(0, 10) as trade}",
     		ctx
     	});
 
@@ -967,141 +967,141 @@ var app = (function () {
     	let header;
     	let h1;
     	let t1;
-    	let div0;
-    	let span0;
-    	let t2;
-    	let span1;
+    	let h20;
     	let t3;
+    	let div0;
+    	let span;
     	let t4;
+    	let t5;
     	let div1;
     	let button;
 
-    	let t5_value = (/*audioEnabled*/ ctx[12]
+    	let t6_value = (/*audioEnabled*/ ctx[12]
     	? '🔊 Audio On'
     	: '🔇 Audio Off') + "";
 
-    	let t5;
-    	let button_class_value;
     	let t6;
+    	let button_class_value;
+    	let t7;
     	let div6;
     	let div5;
     	let div2;
-    	let t8;
-    	let div3;
-    	let t9_value = formatPrice(/*currentPrice*/ ctx[1]) + "";
     	let t9;
+    	let div3;
+    	let t10_value = formatPrice(/*currentPrice*/ ctx[1]) + "";
     	let t10;
+    	let t11;
     	let div4;
     	let div5_class_value;
-    	let t11;
+    	let t12;
     	let div25;
     	let div9;
     	let div7;
-    	let t13;
-    	let div8;
-    	let t14_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "";
     	let t14;
+    	let div8;
+    	let t15_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "";
     	let t15;
+    	let t16;
     	let div12;
     	let div10;
-    	let t17;
-    	let div11;
     	let t18;
+    	let div11;
     	let t19;
+    	let t20;
     	let div15;
     	let div13;
-    	let t21;
-    	let div14;
-    	let t22_value = formatSize(/*avgTradeSize*/ ctx[4]) + "";
     	let t22;
+    	let div14;
+    	let t23_value = formatSize(/*avgTradeSize*/ ctx[4]) + "";
     	let t23;
     	let t24;
+    	let t25;
     	let div18;
     	let div16;
-    	let t26;
-    	let div17;
-    	let t27_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "";
     	let t27;
+    	let div17;
+    	let t28_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "";
     	let t28;
     	let t29;
+    	let t30;
     	let div21;
     	let div19;
-    	let t31;
-    	let div20;
-    	let t32_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "";
     	let t32;
+    	let div20;
+    	let t33_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "";
     	let t33;
+    	let t34;
     	let div24;
     	let div22;
-    	let t35;
-    	let div23;
-    	let t36_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "";
     	let t36;
+    	let div23;
+    	let t37_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "";
     	let t37;
     	let t38;
+    	let t39;
     	let div47;
-    	let h20;
-    	let t40;
+    	let h21;
+    	let t41;
     	let div41;
     	let div28;
     	let div26;
-    	let t42;
-    	let div27;
-    	let t43_value = formatPrice(/*tickerData*/ ctx[7].spread) + "";
     	let t43;
+    	let div27;
+    	let t44_value = formatPrice(/*tickerData*/ ctx[7].spread) + "";
     	let t44;
+    	let t45;
     	let div31;
     	let div29;
-    	let t46;
-    	let div30;
-    	let t47_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "";
     	let t47;
+    	let div30;
+    	let t48_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "";
     	let t48;
+    	let t49;
     	let div34;
     	let div32;
-    	let t50;
-    	let div33;
-    	let t51_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "";
     	let t51;
+    	let div33;
+    	let t52_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "";
     	let t52;
+    	let t53;
     	let div37;
     	let div35;
-    	let t54;
-    	let div36;
-    	let t55_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "";
     	let t55;
+    	let div36;
+    	let t56_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "";
     	let t56;
     	let t57;
+    	let t58;
     	let div40;
     	let div38;
-    	let t59;
-    	let div39;
-    	let t60_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "";
     	let t60;
+    	let div39;
+    	let t61_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "";
     	let t61;
     	let t62;
+    	let t63;
     	let div46;
     	let div43;
     	let h30;
-    	let t64;
-    	let div42;
     	let t65;
+    	let div42;
+    	let t66;
     	let div45;
     	let h31;
-    	let t67;
-    	let div44;
     	let t68;
+    	let div44;
+    	let t69;
     	let div49;
-    	let h21;
-    	let t70;
-    	let div48;
+    	let h22;
     	let t71;
+    	let div48;
+    	let t72;
     	let div54;
     	let div52;
     	let div50;
-    	let t72;
+    	let t73;
     	let div51;
-    	let t74;
+    	let t75;
     	let div53;
     	let div53_class_value;
     	let mounted;
@@ -1155,291 +1155,291 @@ var app = (function () {
     			div55 = element("div");
     			header = element("header");
     			h1 = element("h1");
-    			h1.textContent = "🎵 BTC Live Multi-Channel Audio Visualizer";
+    			h1.textContent = "🎵 BTC Beeper 🎵";
     			t1 = space();
-    			div0 = element("div");
-    			span0 = element("span");
-    			t2 = space();
-    			span1 = element("span");
-    			if_block0.c();
+    			h20 = element("h2");
+    			h20.textContent = "Audio Visualizer";
     			t3 = space();
-    			if (if_block1) if_block1.c();
+    			div0 = element("div");
+    			span = element("span");
+    			if_block0.c();
     			t4 = space();
+    			if (if_block1) if_block1.c();
+    			t5 = space();
     			div1 = element("div");
     			button = element("button");
-    			t5 = text(t5_value);
-    			t6 = space();
+    			t6 = text(t6_value);
+    			t7 = space();
     			div6 = element("div");
     			div5 = element("div");
     			div2 = element("div");
     			div2.textContent = "BTC/USD";
-    			t8 = space();
+    			t9 = space();
     			div3 = element("div");
-    			t9 = text(t9_value);
-    			t10 = space();
+    			t10 = text(t10_value);
+    			t11 = space();
     			div4 = element("div");
     			if_block2.c();
-    			t11 = space();
+    			t12 = space();
     			div25 = element("div");
     			div9 = element("div");
     			div7 = element("div");
     			div7.textContent = "Trades/Second";
-    			t13 = space();
+    			t14 = space();
     			div8 = element("div");
-    			t14 = text(t14_value);
-    			t15 = space();
+    			t15 = text(t15_value);
+    			t16 = space();
     			div12 = element("div");
     			div10 = element("div");
     			div10.textContent = "Total Trades";
-    			t17 = space();
+    			t18 = space();
     			div11 = element("div");
-    			t18 = text(/*tradeCount*/ ctx[3]);
-    			t19 = space();
+    			t19 = text(/*tradeCount*/ ctx[3]);
+    			t20 = space();
     			div15 = element("div");
     			div13 = element("div");
     			div13.textContent = "Avg Trade Size";
-    			t21 = space();
+    			t22 = space();
     			div14 = element("div");
-    			t22 = text(t22_value);
-    			t23 = text(" BTC");
-    			t24 = space();
+    			t23 = text(t23_value);
+    			t24 = text(" BTC");
+    			t25 = space();
     			div18 = element("div");
     			div16 = element("div");
     			div16.textContent = "24h Volume";
-    			t26 = space();
+    			t27 = space();
     			div17 = element("div");
-    			t27 = text(t27_value);
-    			t28 = text(" BTC");
-    			t29 = space();
+    			t28 = text(t28_value);
+    			t29 = text(" BTC");
+    			t30 = space();
     			div21 = element("div");
     			div19 = element("div");
     			div19.textContent = "24h High";
-    			t31 = space();
+    			t32 = space();
     			div20 = element("div");
-    			t32 = text(t32_value);
-    			t33 = space();
+    			t33 = text(t33_value);
+    			t34 = space();
     			div24 = element("div");
     			div22 = element("div");
     			div22.textContent = "24h Low";
-    			t35 = space();
+    			t36 = space();
     			div23 = element("div");
-    			t36 = text(t36_value);
-    			t37 = space();
-    			if (if_block3) if_block3.c();
+    			t37 = text(t37_value);
     			t38 = space();
+    			if (if_block3) if_block3.c();
+    			t39 = space();
     			div47 = element("div");
-    			h20 = element("h2");
-    			h20.textContent = "Order Book";
-    			t40 = space();
+    			h21 = element("h2");
+    			h21.textContent = "Order Book";
+    			t41 = space();
     			div41 = element("div");
     			div28 = element("div");
     			div26 = element("div");
     			div26.textContent = "Spread";
-    			t42 = space();
+    			t43 = space();
     			div27 = element("div");
-    			t43 = text(t43_value);
-    			t44 = space();
+    			t44 = text(t44_value);
+    			t45 = space();
     			div31 = element("div");
     			div29 = element("div");
     			div29.textContent = "Best Bid";
-    			t46 = space();
+    			t47 = space();
     			div30 = element("div");
-    			t47 = text(t47_value);
-    			t48 = space();
+    			t48 = text(t48_value);
+    			t49 = space();
     			div34 = element("div");
     			div32 = element("div");
     			div32.textContent = "Best Ask";
-    			t50 = space();
+    			t51 = space();
     			div33 = element("div");
-    			t51 = text(t51_value);
-    			t52 = space();
+    			t52 = text(t52_value);
+    			t53 = space();
     			div37 = element("div");
     			div35 = element("div");
     			div35.textContent = "Bid Depth";
-    			t54 = space();
+    			t55 = space();
     			div36 = element("div");
-    			t55 = text(t55_value);
-    			t56 = text(" BTC");
-    			t57 = space();
+    			t56 = text(t56_value);
+    			t57 = text(" BTC");
+    			t58 = space();
     			div40 = element("div");
     			div38 = element("div");
     			div38.textContent = "Ask Depth";
-    			t59 = space();
+    			t60 = space();
     			div39 = element("div");
-    			t60 = text(t60_value);
-    			t61 = text(" BTC");
-    			t62 = space();
+    			t61 = text(t61_value);
+    			t62 = text(" BTC");
+    			t63 = space();
     			div46 = element("div");
     			div43 = element("div");
     			h30 = element("h3");
     			h30.textContent = "Bids";
-    			t64 = space();
+    			t65 = space();
     			div42 = element("div");
 
     			for (let i = 0; i < each_blocks_2.length; i += 1) {
     				each_blocks_2[i].c();
     			}
 
-    			t65 = space();
+    			t66 = space();
     			div45 = element("div");
     			h31 = element("h3");
     			h31.textContent = "Asks";
-    			t67 = space();
+    			t68 = space();
     			div44 = element("div");
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
     				each_blocks_1[i].c();
     			}
 
-    			t68 = space();
+    			t69 = space();
     			div49 = element("div");
-    			h21 = element("h2");
-    			h21.textContent = "Recent Trades";
-    			t70 = space();
+    			h22 = element("h2");
+    			h22.textContent = "Recent Trades";
+    			t71 = space();
     			div48 = element("div");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t71 = space();
+    			t72 = space();
     			div54 = element("div");
     			div52 = element("div");
     			div50 = element("div");
-    			t72 = space();
+    			t73 = space();
     			div51 = element("div");
     			div51.textContent = "Volume Intensity";
-    			t74 = space();
+    			t75 = space();
     			div53 = element("div");
     			attr_dev(h1, "class", "svelte-94kqpu");
     			add_location(h1, file, 263, 6, 7004);
-    			attr_dev(span0, "class", "status-indicator " + /*getConnectionStatus*/ ctx[14]() + " svelte-94kqpu");
-    			add_location(span0, file, 265, 8, 7102);
-    			attr_dev(span1, "class", "status-text");
-    			add_location(span1, file, 266, 8, 7173);
+    			add_location(h20, file, 264, 6, 7037);
+    			attr_dev(span, "class", "status-text");
+    			add_location(span, file, 267, 8, 7117);
     			attr_dev(div0, "class", "connection-status svelte-94kqpu");
-    			add_location(div0, file, 264, 6, 7062);
+    			add_location(div0, file, 265, 6, 7069);
     			attr_dev(header, "class", "svelte-94kqpu");
     			add_location(header, file, 262, 4, 6989);
     			attr_dev(button, "class", button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[12] ? 'enabled' : 'disabled') + " svelte-94kqpu");
-    			add_location(button, file, 282, 6, 7572);
+    			add_location(button, file, 283, 6, 7516);
     			attr_dev(div1, "class", "controls svelte-94kqpu");
-    			add_location(div1, file, 281, 4, 7543);
+    			add_location(div1, file, 282, 4, 7487);
     			attr_dev(div2, "class", "price-label svelte-94kqpu");
-    			add_location(div2, file, 289, 8, 7840);
+    			add_location(div2, file, 290, 8, 7784);
     			attr_dev(div3, "class", "price-value svelte-94kqpu");
-    			add_location(div3, file, 290, 8, 7887);
+    			add_location(div3, file, 291, 8, 7831);
     			attr_dev(div4, "class", "price-change svelte-94kqpu");
-    			add_location(div4, file, 291, 8, 7954);
+    			add_location(div4, file, 292, 8, 7898);
     			attr_dev(div5, "class", div5_class_value = "current-price " + /*priceDirection*/ ctx[10] + " svelte-94kqpu");
-    			add_location(div5, file, 288, 6, 7787);
+    			add_location(div5, file, 289, 6, 7731);
     			attr_dev(div6, "class", "price-section svelte-94kqpu");
-    			add_location(div6, file, 287, 4, 7753);
+    			add_location(div6, file, 288, 4, 7697);
     			attr_dev(div7, "class", "stat-label svelte-94kqpu");
-    			add_location(div7, file, 306, 8, 8300);
+    			add_location(div7, file, 307, 8, 8244);
     			attr_dev(div8, "class", "stat-value svelte-94kqpu");
-    			add_location(div8, file, 307, 8, 8352);
+    			add_location(div8, file, 308, 8, 8296);
     			attr_dev(div9, "class", "stat-card svelte-94kqpu");
-    			add_location(div9, file, 305, 6, 8268);
+    			add_location(div9, file, 306, 6, 8212);
     			attr_dev(div10, "class", "stat-label svelte-94kqpu");
-    			add_location(div10, file, 310, 8, 8462);
+    			add_location(div10, file, 311, 8, 8406);
     			attr_dev(div11, "class", "stat-value svelte-94kqpu");
-    			add_location(div11, file, 311, 8, 8513);
+    			add_location(div11, file, 312, 8, 8457);
     			attr_dev(div12, "class", "stat-card svelte-94kqpu");
-    			add_location(div12, file, 309, 6, 8430);
+    			add_location(div12, file, 310, 6, 8374);
     			attr_dev(div13, "class", "stat-label svelte-94kqpu");
-    			add_location(div13, file, 314, 8, 8607);
+    			add_location(div13, file, 315, 8, 8551);
     			attr_dev(div14, "class", "stat-value svelte-94kqpu");
-    			add_location(div14, file, 315, 8, 8660);
+    			add_location(div14, file, 316, 8, 8604);
     			attr_dev(div15, "class", "stat-card svelte-94kqpu");
-    			add_location(div15, file, 313, 6, 8575);
+    			add_location(div15, file, 314, 6, 8519);
     			attr_dev(div16, "class", "stat-label svelte-94kqpu");
-    			add_location(div16, file, 318, 8, 8772);
+    			add_location(div16, file, 319, 8, 8716);
     			attr_dev(div17, "class", "stat-value svelte-94kqpu");
-    			add_location(div17, file, 319, 8, 8821);
+    			add_location(div17, file, 320, 8, 8765);
     			attr_dev(div18, "class", "stat-card svelte-94kqpu");
-    			add_location(div18, file, 317, 6, 8740);
+    			add_location(div18, file, 318, 6, 8684);
     			attr_dev(div19, "class", "stat-label svelte-94kqpu");
-    			add_location(div19, file, 322, 8, 8943);
+    			add_location(div19, file, 323, 8, 8887);
     			attr_dev(div20, "class", "stat-value svelte-94kqpu");
-    			add_location(div20, file, 323, 8, 8990);
+    			add_location(div20, file, 324, 8, 8934);
     			attr_dev(div21, "class", "stat-card svelte-94kqpu");
-    			add_location(div21, file, 321, 6, 8911);
+    			add_location(div21, file, 322, 6, 8855);
     			attr_dev(div22, "class", "stat-label svelte-94kqpu");
-    			add_location(div22, file, 326, 8, 9105);
+    			add_location(div22, file, 327, 8, 9049);
     			attr_dev(div23, "class", "stat-value svelte-94kqpu");
-    			add_location(div23, file, 327, 8, 9151);
+    			add_location(div23, file, 328, 8, 9095);
     			attr_dev(div24, "class", "stat-card svelte-94kqpu");
-    			add_location(div24, file, 325, 6, 9073);
+    			add_location(div24, file, 326, 6, 9017);
     			attr_dev(div25, "class", "stats-grid svelte-94kqpu");
-    			add_location(div25, file, 304, 4, 8237);
-    			attr_dev(h20, "class", "svelte-94kqpu");
-    			add_location(h20, file, 344, 6, 9840);
-    			attr_dev(div26, "class", "stat-label svelte-94kqpu");
-    			add_location(div26, file, 347, 10, 9938);
-    			attr_dev(div27, "class", "stat-value svelte-94kqpu");
-    			add_location(div27, file, 348, 10, 9985);
-    			attr_dev(div28, "class", "stat-card svelte-94kqpu");
-    			add_location(div28, file, 346, 8, 9904);
-    			attr_dev(div29, "class", "stat-label svelte-94kqpu");
-    			add_location(div29, file, 351, 10, 10105);
-    			attr_dev(div30, "class", "stat-value svelte-94kqpu");
-    			add_location(div30, file, 352, 10, 10154);
-    			attr_dev(div31, "class", "stat-card svelte-94kqpu");
-    			add_location(div31, file, 350, 8, 10071);
-    			attr_dev(div32, "class", "stat-label svelte-94kqpu");
-    			add_location(div32, file, 355, 10, 10275);
-    			attr_dev(div33, "class", "stat-value svelte-94kqpu");
-    			add_location(div33, file, 356, 10, 10324);
-    			attr_dev(div34, "class", "stat-card svelte-94kqpu");
-    			add_location(div34, file, 354, 8, 10241);
-    			attr_dev(div35, "class", "stat-label svelte-94kqpu");
-    			add_location(div35, file, 359, 10, 10445);
-    			attr_dev(div36, "class", "stat-value svelte-94kqpu");
-    			add_location(div36, file, 360, 10, 10495);
-    			attr_dev(div37, "class", "stat-card svelte-94kqpu");
-    			add_location(div37, file, 358, 8, 10411);
-    			attr_dev(div38, "class", "stat-label svelte-94kqpu");
-    			add_location(div38, file, 363, 10, 10619);
-    			attr_dev(div39, "class", "stat-value svelte-94kqpu");
-    			add_location(div39, file, 364, 10, 10669);
-    			attr_dev(div40, "class", "stat-card svelte-94kqpu");
-    			add_location(div40, file, 362, 8, 10585);
-    			attr_dev(div41, "class", "orderbook-stats svelte-94kqpu");
-    			add_location(div41, file, 345, 6, 9866);
-    			attr_dev(h30, "class", "svelte-94kqpu");
-    			add_location(h30, file, 370, 10, 10856);
-    			attr_dev(div42, "class", "orderbook-orders svelte-94kqpu");
-    			add_location(div42, file, 371, 10, 10880);
-    			attr_dev(div43, "class", "orderbook-side svelte-94kqpu");
-    			add_location(div43, file, 369, 8, 10817);
-    			attr_dev(h31, "class", "svelte-94kqpu");
-    			add_location(h31, file, 382, 10, 11295);
-    			attr_dev(div44, "class", "orderbook-orders svelte-94kqpu");
-    			add_location(div44, file, 383, 10, 11319);
-    			attr_dev(div45, "class", "orderbook-side svelte-94kqpu");
-    			add_location(div45, file, 381, 8, 11256);
-    			attr_dev(div46, "class", "orderbook-display svelte-94kqpu");
-    			add_location(div46, file, 368, 6, 10777);
-    			attr_dev(div47, "class", "orderbook-section svelte-94kqpu");
-    			add_location(div47, file, 343, 4, 9802);
+    			add_location(div25, file, 305, 4, 8181);
     			attr_dev(h21, "class", "svelte-94kqpu");
-    			add_location(h21, file, 396, 6, 11746);
+    			add_location(h21, file, 345, 6, 9784);
+    			attr_dev(div26, "class", "stat-label svelte-94kqpu");
+    			add_location(div26, file, 348, 10, 9882);
+    			attr_dev(div27, "class", "stat-value svelte-94kqpu");
+    			add_location(div27, file, 349, 10, 9929);
+    			attr_dev(div28, "class", "stat-card svelte-94kqpu");
+    			add_location(div28, file, 347, 8, 9848);
+    			attr_dev(div29, "class", "stat-label svelte-94kqpu");
+    			add_location(div29, file, 352, 10, 10049);
+    			attr_dev(div30, "class", "stat-value svelte-94kqpu");
+    			add_location(div30, file, 353, 10, 10098);
+    			attr_dev(div31, "class", "stat-card svelte-94kqpu");
+    			add_location(div31, file, 351, 8, 10015);
+    			attr_dev(div32, "class", "stat-label svelte-94kqpu");
+    			add_location(div32, file, 356, 10, 10219);
+    			attr_dev(div33, "class", "stat-value svelte-94kqpu");
+    			add_location(div33, file, 357, 10, 10268);
+    			attr_dev(div34, "class", "stat-card svelte-94kqpu");
+    			add_location(div34, file, 355, 8, 10185);
+    			attr_dev(div35, "class", "stat-label svelte-94kqpu");
+    			add_location(div35, file, 360, 10, 10389);
+    			attr_dev(div36, "class", "stat-value svelte-94kqpu");
+    			add_location(div36, file, 361, 10, 10439);
+    			attr_dev(div37, "class", "stat-card svelte-94kqpu");
+    			add_location(div37, file, 359, 8, 10355);
+    			attr_dev(div38, "class", "stat-label svelte-94kqpu");
+    			add_location(div38, file, 364, 10, 10563);
+    			attr_dev(div39, "class", "stat-value svelte-94kqpu");
+    			add_location(div39, file, 365, 10, 10613);
+    			attr_dev(div40, "class", "stat-card svelte-94kqpu");
+    			add_location(div40, file, 363, 8, 10529);
+    			attr_dev(div41, "class", "orderbook-stats svelte-94kqpu");
+    			add_location(div41, file, 346, 6, 9810);
+    			attr_dev(h30, "class", "svelte-94kqpu");
+    			add_location(h30, file, 371, 10, 10800);
+    			attr_dev(div42, "class", "orderbook-orders svelte-94kqpu");
+    			add_location(div42, file, 372, 10, 10824);
+    			attr_dev(div43, "class", "orderbook-side svelte-94kqpu");
+    			add_location(div43, file, 370, 8, 10761);
+    			attr_dev(h31, "class", "svelte-94kqpu");
+    			add_location(h31, file, 383, 10, 11239);
+    			attr_dev(div44, "class", "orderbook-orders svelte-94kqpu");
+    			add_location(div44, file, 384, 10, 11263);
+    			attr_dev(div45, "class", "orderbook-side svelte-94kqpu");
+    			add_location(div45, file, 382, 8, 11200);
+    			attr_dev(div46, "class", "orderbook-display svelte-94kqpu");
+    			add_location(div46, file, 369, 6, 10721);
+    			attr_dev(div47, "class", "orderbook-section svelte-94kqpu");
+    			add_location(div47, file, 344, 4, 9746);
+    			attr_dev(h22, "class", "svelte-94kqpu");
+    			add_location(h22, file, 397, 6, 11690);
     			attr_dev(div48, "class", "trades-list svelte-94kqpu");
-    			add_location(div48, file, 397, 6, 11775);
+    			add_location(div48, file, 398, 6, 11719);
     			attr_dev(div49, "class", "trades-section svelte-94kqpu");
-    			add_location(div49, file, 395, 4, 11711);
+    			add_location(div49, file, 396, 4, 11655);
     			attr_dev(div50, "class", "volume-fill svelte-94kqpu");
     			set_style(div50, "width", /*volumeIntensity*/ ctx[11] * 100 + "%");
-    			add_location(div50, file, 411, 8, 12314);
+    			add_location(div50, file, 412, 8, 12258);
     			attr_dev(div51, "class", "volume-label svelte-94kqpu");
-    			add_location(div51, file, 412, 8, 12394);
+    			add_location(div51, file, 413, 8, 12338);
     			attr_dev(div52, "class", "volume-bar svelte-94kqpu");
-    			add_location(div52, file, 410, 6, 12281);
+    			add_location(div52, file, 411, 6, 12225);
     			attr_dev(div53, "class", div53_class_value = "pulse-indicator " + (/*audioEnabled*/ ctx[12] ? 'active' : '') + " svelte-94kqpu");
-    			add_location(div53, file, 414, 6, 12462);
+    			add_location(div53, file, 415, 6, 12406);
     			attr_dev(div54, "class", "visualizer svelte-94kqpu");
-    			add_location(div54, file, 409, 4, 12250);
+    			add_location(div54, file, 410, 4, 12194);
     			attr_dev(div55, "class", "container svelte-94kqpu");
     			add_location(div55, file, 261, 2, 6961);
     			add_location(main, file, 260, 0, 6952);
@@ -1453,109 +1453,109 @@ var app = (function () {
     			append_dev(div55, header);
     			append_dev(header, h1);
     			append_dev(header, t1);
+    			append_dev(header, h20);
+    			append_dev(header, t3);
     			append_dev(header, div0);
-    			append_dev(div0, span0);
-    			append_dev(div0, t2);
-    			append_dev(div0, span1);
-    			if_block0.m(span1, null);
-    			append_dev(div0, t3);
+    			append_dev(div0, span);
+    			if_block0.m(span, null);
+    			append_dev(div0, t4);
     			if (if_block1) if_block1.m(div0, null);
-    			append_dev(div55, t4);
+    			append_dev(div55, t5);
     			append_dev(div55, div1);
     			append_dev(div1, button);
-    			append_dev(button, t5);
-    			append_dev(div55, t6);
+    			append_dev(button, t6);
+    			append_dev(div55, t7);
     			append_dev(div55, div6);
     			append_dev(div6, div5);
     			append_dev(div5, div2);
-    			append_dev(div5, t8);
+    			append_dev(div5, t9);
     			append_dev(div5, div3);
-    			append_dev(div3, t9);
-    			append_dev(div5, t10);
+    			append_dev(div3, t10);
+    			append_dev(div5, t11);
     			append_dev(div5, div4);
     			if_block2.m(div4, null);
-    			append_dev(div55, t11);
+    			append_dev(div55, t12);
     			append_dev(div55, div25);
     			append_dev(div25, div9);
     			append_dev(div9, div7);
-    			append_dev(div9, t13);
+    			append_dev(div9, t14);
     			append_dev(div9, div8);
-    			append_dev(div8, t14);
-    			append_dev(div25, t15);
+    			append_dev(div8, t15);
+    			append_dev(div25, t16);
     			append_dev(div25, div12);
     			append_dev(div12, div10);
-    			append_dev(div12, t17);
+    			append_dev(div12, t18);
     			append_dev(div12, div11);
-    			append_dev(div11, t18);
-    			append_dev(div25, t19);
+    			append_dev(div11, t19);
+    			append_dev(div25, t20);
     			append_dev(div25, div15);
     			append_dev(div15, div13);
-    			append_dev(div15, t21);
+    			append_dev(div15, t22);
     			append_dev(div15, div14);
-    			append_dev(div14, t22);
     			append_dev(div14, t23);
-    			append_dev(div25, t24);
+    			append_dev(div14, t24);
+    			append_dev(div25, t25);
     			append_dev(div25, div18);
     			append_dev(div18, div16);
-    			append_dev(div18, t26);
+    			append_dev(div18, t27);
     			append_dev(div18, div17);
-    			append_dev(div17, t27);
     			append_dev(div17, t28);
-    			append_dev(div25, t29);
+    			append_dev(div17, t29);
+    			append_dev(div25, t30);
     			append_dev(div25, div21);
     			append_dev(div21, div19);
-    			append_dev(div21, t31);
+    			append_dev(div21, t32);
     			append_dev(div21, div20);
-    			append_dev(div20, t32);
-    			append_dev(div25, t33);
+    			append_dev(div20, t33);
+    			append_dev(div25, t34);
     			append_dev(div25, div24);
     			append_dev(div24, div22);
-    			append_dev(div24, t35);
+    			append_dev(div24, t36);
     			append_dev(div24, div23);
-    			append_dev(div23, t36);
-    			append_dev(div25, t37);
+    			append_dev(div23, t37);
+    			append_dev(div25, t38);
     			if (if_block3) if_block3.m(div25, null);
-    			append_dev(div55, t38);
+    			append_dev(div55, t39);
     			append_dev(div55, div47);
-    			append_dev(div47, h20);
-    			append_dev(div47, t40);
+    			append_dev(div47, h21);
+    			append_dev(div47, t41);
     			append_dev(div47, div41);
     			append_dev(div41, div28);
     			append_dev(div28, div26);
-    			append_dev(div28, t42);
+    			append_dev(div28, t43);
     			append_dev(div28, div27);
-    			append_dev(div27, t43);
-    			append_dev(div41, t44);
+    			append_dev(div27, t44);
+    			append_dev(div41, t45);
     			append_dev(div41, div31);
     			append_dev(div31, div29);
-    			append_dev(div31, t46);
+    			append_dev(div31, t47);
     			append_dev(div31, div30);
-    			append_dev(div30, t47);
-    			append_dev(div41, t48);
+    			append_dev(div30, t48);
+    			append_dev(div41, t49);
     			append_dev(div41, div34);
     			append_dev(div34, div32);
-    			append_dev(div34, t50);
+    			append_dev(div34, t51);
     			append_dev(div34, div33);
-    			append_dev(div33, t51);
-    			append_dev(div41, t52);
+    			append_dev(div33, t52);
+    			append_dev(div41, t53);
     			append_dev(div41, div37);
     			append_dev(div37, div35);
-    			append_dev(div37, t54);
+    			append_dev(div37, t55);
     			append_dev(div37, div36);
-    			append_dev(div36, t55);
     			append_dev(div36, t56);
-    			append_dev(div41, t57);
+    			append_dev(div36, t57);
+    			append_dev(div41, t58);
     			append_dev(div41, div40);
     			append_dev(div40, div38);
-    			append_dev(div40, t59);
+    			append_dev(div40, t60);
     			append_dev(div40, div39);
-    			append_dev(div39, t60);
     			append_dev(div39, t61);
-    			append_dev(div47, t62);
+    			append_dev(div39, t62);
+    			append_dev(div47, t63);
     			append_dev(div47, div46);
     			append_dev(div46, div43);
     			append_dev(div43, h30);
-    			append_dev(div43, t64);
+    			append_dev(div43, t65);
     			append_dev(div43, div42);
 
     			for (let i = 0; i < each_blocks_2.length; i += 1) {
@@ -1564,10 +1564,10 @@ var app = (function () {
     				}
     			}
 
-    			append_dev(div46, t65);
+    			append_dev(div46, t66);
     			append_dev(div46, div45);
     			append_dev(div45, h31);
-    			append_dev(div45, t67);
+    			append_dev(div45, t68);
     			append_dev(div45, div44);
 
     			for (let i = 0; i < each_blocks_1.length; i += 1) {
@@ -1576,10 +1576,10 @@ var app = (function () {
     				}
     			}
 
-    			append_dev(div55, t68);
+    			append_dev(div55, t69);
     			append_dev(div55, div49);
-    			append_dev(div49, h21);
-    			append_dev(div49, t70);
+    			append_dev(div49, h22);
+    			append_dev(div49, t71);
     			append_dev(div49, div48);
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
@@ -1588,13 +1588,13 @@ var app = (function () {
     				}
     			}
 
-    			append_dev(div55, t71);
+    			append_dev(div55, t72);
     			append_dev(div55, div54);
     			append_dev(div54, div52);
     			append_dev(div52, div50);
-    			append_dev(div52, t72);
+    			append_dev(div52, t73);
     			append_dev(div52, div51);
-    			append_dev(div54, t74);
+    			append_dev(div54, t75);
     			append_dev(div54, div53);
 
     			if (!mounted) {
@@ -1611,7 +1611,7 @@ var app = (function () {
 
     				if (if_block0) {
     					if_block0.c();
-    					if_block0.m(span1, null);
+    					if_block0.m(span, null);
     				}
     			}
 
@@ -1628,15 +1628,15 @@ var app = (function () {
     				if_block1 = null;
     			}
 
-    			if (dirty[0] & /*audioEnabled*/ 4096 && t5_value !== (t5_value = (/*audioEnabled*/ ctx[12]
+    			if (dirty[0] & /*audioEnabled*/ 4096 && t6_value !== (t6_value = (/*audioEnabled*/ ctx[12]
     			? '🔊 Audio On'
-    			: '🔇 Audio Off') + "")) set_data_dev(t5, t5_value);
+    			: '🔇 Audio Off') + "")) set_data_dev(t6, t6_value);
 
     			if (dirty[0] & /*audioEnabled*/ 4096 && button_class_value !== (button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[12] ? 'enabled' : 'disabled') + " svelte-94kqpu")) {
     				attr_dev(button, "class", button_class_value);
     			}
 
-    			if (dirty[0] & /*currentPrice*/ 2 && t9_value !== (t9_value = formatPrice(/*currentPrice*/ ctx[1]) + "")) set_data_dev(t9, t9_value);
+    			if (dirty[0] & /*currentPrice*/ 2 && t10_value !== (t10_value = formatPrice(/*currentPrice*/ ctx[1]) + "")) set_data_dev(t10, t10_value);
 
     			if (current_block_type_1 !== (current_block_type_1 = select_block_type_1(ctx))) {
     				if_block2.d(1);
@@ -1652,12 +1652,12 @@ var app = (function () {
     				attr_dev(div5, "class", div5_class_value);
     			}
 
-    			if (dirty[0] & /*tradesPerSecond*/ 32 && t14_value !== (t14_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "")) set_data_dev(t14, t14_value);
-    			if (dirty[0] & /*tradeCount*/ 8) set_data_dev(t18, /*tradeCount*/ ctx[3]);
-    			if (dirty[0] & /*avgTradeSize*/ 16 && t22_value !== (t22_value = formatSize(/*avgTradeSize*/ ctx[4]) + "")) set_data_dev(t22, t22_value);
-    			if (dirty[0] & /*tickerData*/ 128 && t27_value !== (t27_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "")) set_data_dev(t27, t27_value);
-    			if (dirty[0] & /*tickerData*/ 128 && t32_value !== (t32_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "")) set_data_dev(t32, t32_value);
-    			if (dirty[0] & /*tickerData*/ 128 && t36_value !== (t36_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "")) set_data_dev(t36, t36_value);
+    			if (dirty[0] & /*tradesPerSecond*/ 32 && t15_value !== (t15_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "")) set_data_dev(t15, t15_value);
+    			if (dirty[0] & /*tradeCount*/ 8) set_data_dev(t19, /*tradeCount*/ ctx[3]);
+    			if (dirty[0] & /*avgTradeSize*/ 16 && t23_value !== (t23_value = formatSize(/*avgTradeSize*/ ctx[4]) + "")) set_data_dev(t23, t23_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t28_value !== (t28_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "")) set_data_dev(t28, t28_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t33_value !== (t33_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "")) set_data_dev(t33, t33_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t37_value !== (t37_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "")) set_data_dev(t37, t37_value);
 
     			if (/*largestTrade*/ ctx[6]) {
     				if (if_block3) {
@@ -1672,11 +1672,11 @@ var app = (function () {
     				if_block3 = null;
     			}
 
-    			if (dirty[0] & /*tickerData*/ 128 && t43_value !== (t43_value = formatPrice(/*tickerData*/ ctx[7].spread) + "")) set_data_dev(t43, t43_value);
-    			if (dirty[0] & /*tickerData*/ 128 && t47_value !== (t47_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "")) set_data_dev(t47, t47_value);
-    			if (dirty[0] & /*tickerData*/ 128 && t51_value !== (t51_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "")) set_data_dev(t51, t51_value);
-    			if (dirty[0] & /*orderBook*/ 256 && t55_value !== (t55_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "")) set_data_dev(t55, t55_value);
-    			if (dirty[0] & /*orderBook*/ 256 && t60_value !== (t60_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "")) set_data_dev(t60, t60_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t44_value !== (t44_value = formatPrice(/*tickerData*/ ctx[7].spread) + "")) set_data_dev(t44, t44_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t48_value !== (t48_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "")) set_data_dev(t48, t48_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t52_value !== (t52_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "")) set_data_dev(t52, t52_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t56_value !== (t56_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "")) set_data_dev(t56, t56_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t61_value !== (t61_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "")) set_data_dev(t61, t61_value);
 
     			if (dirty[0] & /*orderBook*/ 256) {
     				each_value_2 = /*orderBook*/ ctx[8].bids;

@@ -24,6 +24,7 @@ stats = {
     "avg_trade_size": 0.0,
     "largest_trade": None,
     "tps": 0.0,
+    "highest_tps": 0.0,
 }
 
 recent_trades = []  # Keep last N trades
@@ -34,15 +35,7 @@ audio_enabled = True
 last_heartbeat = None
 connection_status = "disconnected"
 
-order_book = {
-    "bids": [],
-    "asks": [],
-    "spread": 0.0,
-    "bid_depth": 0.0,
-    "ask_depth": 0.0,
-    "best_bid": 0.0,
-    "best_ask": 0.0
-}
+order_book = None  # No longer used
 
 # For keypress listening (audio toggle)
 def listen_for_keys():
@@ -76,30 +69,18 @@ def make_table():
     table.add_row("Volume Today", f"{stats['volume_today']:.6f} BTC")
     table.add_row("24h Change", f"{stats['price_change_24h']:.2f}%")
     table.add_row("Trades/sec (TPS)", f"{stats['tps']:.2f}")
+    table.add_row("Highest TPS", f"{stats['highest_tps']:.2f}")
     table.add_row("Avg Trade Size", f"{stats['avg_trade_size']:.6f} BTC")
     if stats['largest_trade']:
         lt = stats['largest_trade']
         table.add_row("Largest Trade", f"{lt['side'].capitalize()} {lt['size']:.6f} BTC @ ${lt['price']:.2f}")
     table.add_section()
-    table.add_row("[bold]Recent Trades[/bold]", "")
-    for trade in reversed(recent_trades[-5:]):
+    table.add_row("[bold]Recent Trades (10)[/bold]", "")
+    for trade in reversed(recent_trades[-10:]):
         price = f"${trade['price']:.2f}"
         size = f"{trade['size']:.6f} BTC"
         side = trade["side"]
         table.add_row(f"{side.capitalize()} @ {price}", size)
-    table.add_section()
-    table.add_row("[bold]Order Book[/bold]", "")
-    table.add_row("Spread", f"${order_book['spread']:.2f}")
-    table.add_row("Bid Depth (top 10)", f"{order_book['bid_depth']:.6f} BTC")
-    table.add_row("Ask Depth (top 10)", f"{order_book['ask_depth']:.6f} BTC")
-    table.add_row("Best Bid", f"${order_book['best_bid']:.2f}")
-    table.add_row("Best Ask", f"${order_book['best_ask']:.2f}")
-    table.add_section()
-    table.add_row("[bold]Connection[/bold]", "")
-    table.add_row("Status", connection_status)
-    if last_heartbeat:
-        table.add_row("Last Heartbeat", time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_heartbeat)))
-    table.add_row("Audio", "On (press 'a' to toggle)" if audio_enabled else "Off (press 'a' to toggle)")
     return table
 
 async def play_click():
@@ -113,12 +94,13 @@ def update_tps():
     while trade_timestamps and now - trade_timestamps[0] > TPS_WINDOW:
         trade_timestamps.pop(0)
     stats['tps'] = len(trade_timestamps) / TPS_WINDOW
+    if stats['tps'] > stats['highest_tps']:
+        stats['highest_tps'] = stats['tps']
 
 async def run_cli():
-    global stats, recent_trades, last_heartbeat, connection_status, order_book
+    global stats, recent_trades
     try:
         async with websockets.connect(WS_URL) as websocket:
-            connection_status = "connected"
             with Live(make_table(), refresh_per_second=5) as live:
                 while True:
                     try:
@@ -145,29 +127,7 @@ async def run_cli():
                         elif msg_type == "btc_ticker":
                             stats["last_price"] = payload["price"]
                             stats["price_change_24h"] = payload.get("price_change_24h", stats["price_change_24h"])
-                            # 24h high/low/volume can be added if desired
-
-                        elif msg_type == "btc_orderbook_snapshot":
-                            # Parse top 10 bids/asks
-                            order_book["bids"] = payload["bids"]
-                            order_book["asks"] = payload["asks"]
-                            order_book["spread"] = float(payload["asks"][0][0]) - float(payload["bids"][0][0]) if payload["bids"] and payload["asks"] else 0.0
-                            order_book["bid_depth"] = sum(float(size) for _, size in payload["bids"])
-                            order_book["ask_depth"] = sum(float(size) for _, size in payload["asks"])
-                            order_book["best_bid"] = float(payload["bids"][0][0]) if payload["bids"] else 0.0
-                            order_book["best_ask"] = float(payload["asks"][0][0]) if payload["asks"] else 0.0
-
-                        elif msg_type == "btc_orderbook_update":
-                            # For simplicity, ignore incremental updates in CLI (could be implemented for full order book)
-                            pass
-
-                        elif msg_type == "btc_heartbeat":
-                            last_heartbeat = time.time()
-                            connection_status = "healthy"
-
-                        elif msg_type == "btc_status":
-                            connection_status = payload.get("status", "active")
-
+                        # Remove order book and connection/heartbeat logic
                         live.update(make_table())
 
                     except asyncio.CancelledError:

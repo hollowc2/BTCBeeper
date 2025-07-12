@@ -261,9 +261,10 @@
 <main>
   <div class="container">
     <header>
-      <h1>🎵 BTC Live Multi-Channel Audio Visualizer</h1>
+      <h1>🎵 BTC Beeper 🎵 </h1>
+      <h2>Audio Visualizer</h2>
       <div class="connection-status">
-        <span class="status-indicator {getConnectionStatus()}"></span>
+       
         <span class="status-text">
           {#if isConnected}
             Connected ({getConnectionStatus()})
