@@ -46,38 +46,47 @@ def make_table():
 
 async def play_click():
     """Play click sound using pygame."""
-    if os.path.exists(CLICK_SOUND_PATH):
+    if os.path.exists(CLICK_SOUND_PATH) and click_sound:
         click_sound.play()
 
 async def run_cli():
     global stats, recent_trades
-    async with websockets.connect(WS_URL) as websocket:
-        with Live(make_table(), refresh_per_second=5) as live:
-            while True:
-                try:
-                    message = await websocket.recv()
-                    data = json.loads(message)
-                    msg_type = data.get("type")
-                    payload = data.get("data", {})
+    try:
+        async with websockets.connect(WS_URL) as websocket:
+            with Live(make_table(), refresh_per_second=5) as live:
+                while True:
+                    try:
+                        message = await websocket.recv()
+                        data = json.loads(message)
+                        msg_type = data.get("type")
+                        payload = data.get("data", {})
 
-                    if msg_type == "btc_trade":
-                        stats["total_trades"] += 1
-                        stats["last_price"] = payload["price"]
-                        stats["volume_today"] += payload["size"]
-                        recent_trades.append(payload)
-                        await play_click()
+                        if msg_type == "btc_trade":
+                            stats["total_trades"] += 1
+                            stats["last_price"] = payload["price"]
+                            stats["volume_today"] += payload["size"]
+                            recent_trades.append(payload)
+                            await play_click()
 
-                    elif msg_type == "btc_ticker":
-                        stats["last_price"] = payload["price"]
-                        stats["price_change_24h"] = payload.get("price_change_24h", stats["price_change_24h"])
+                        elif msg_type == "btc_ticker":
+                            stats["last_price"] = payload["price"]
+                            stats["price_change_24h"] = payload.get("price_change_24h", stats["price_change_24h"])
 
-                    live.update(make_table())
+                        live.update(make_table())
 
-                except Exception as e:
-                    print(f"[Error]: {e}")
-                    break
+                    except asyncio.CancelledError:
+                        # Clean exit on cancellation
+                        break
+                    except Exception as e:
+                        print(f"[Error]: {e}")
+                        break
+    except asyncio.CancelledError:
+        # Clean exit on cancellation
+        pass
 
 if __name__ == "__main__":
+    # Clear the terminal before starting
+    os.system("clear" if os.name == "posix" else "cls")
     print("Starting BTC CLI Visualizer...")
     print("Press Ctrl+C to exit.")
 
@@ -89,4 +98,9 @@ if __name__ == "__main__":
         click_sound = None
         print("Warning: click sound file not found!")
 
-    asyncio.run(run_cli())
+    try:
+        asyncio.run(run_cli())
+    except KeyboardInterrupt:
+        print("\nExiting cleanly. Goodbye!")
+    finally:
+        pygame.mixer.quit()
