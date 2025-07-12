@@ -5,14 +5,6 @@
   let ws;
   let isConnected = false;
   
-  // Audio context and nodes
-  let audioContext;
-  let oscillator;
-  let gainNode;
-  let analyser;
-  let dataArray;
-  let isAudioInitialized = false;
-  
   // Trade data
   let currentPrice = 0;
   let lastPrice = 0;
@@ -23,10 +15,34 @@
   let tradesPerSecond = 0;
   let largestTrade = null;
   
+  // New ticker data
+  let tickerData = {
+    bestBid: 0,
+    bestAsk: 0,
+    volume24h: 0,
+    low24h: 0,
+    high24h: 0,
+    spread: 0
+  };
+  
+  // Order book data
+  let orderBook = {
+    bids: [],
+    asks: [],
+    spread: 0,
+    bidDepth: 0,
+    askDepth: 0
+  };
+  
+  // Connection health
+  let lastHeartbeat = null;
+  let connectionHealth = 'unknown';
+  
   // UI state
   let priceDirection = 'neutral'; // 'up', 'down', 'neutral'
   let volumeIntensity = 0;
   let audioEnabled = false;
+  let activeChannels = ['matches', 'ticker', 'level2', 'heartbeat'];
   
   // Rolling window for TPS calculation
   let tradeTimestamps = [];
@@ -39,36 +55,62 @@
     // Preload the click sound
     clickSound = new Audio('/geiger_click.wav');
     clickSound.load();
-    initializeAudio();
   });
   
   onDestroy(() => {
     if (ws) {
       ws.close();
     }
-    if (audioContext) {
-      audioContext.close();
-    }
   });
   
   function connectWebSocket() {
     try {
-      ws = new WebSocket('ws://localhost:8000/ws');
+      // Connect with channel filtering for multi-channel support
+      const channelParam = activeChannels.join(',');
+      ws = new WebSocket(`ws://localhost:8000/ws?channels=${channelParam}`);
       
       ws.onopen = () => {
         isConnected = true;
-        console.log('Connected to WebSocket');
+        connectionHealth = 'healthy';
+        console.log('Connected to WebSocket with channels:', activeChannels);
       };
       
       ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
-        if (message.type === 'trade') {
-          processTrade(message.data);
+        
+        // Only process BTC data
+        if (message.product_id && message.product_id !== 'BTC-USD') {
+          return;
+        }
+        
+        switch (message.type) {
+          case 'btc_trade':
+            processTrade(message.data);
+            break;
+          case 'btc_ticker':
+            processTicker(message.data);
+            break;
+          case 'btc_orderbook_snapshot':
+            processOrderBookSnapshot(message.data);
+            break;
+          case 'btc_orderbook_update':
+            processOrderBookUpdate(message.data);
+            break;
+          case 'btc_heartbeat':
+            processHeartbeat(message.data);
+            break;
+          case 'btc_status':
+            processStatus(message.data);
+            break;
+          case 'filter_channels':
+            console.log('Channel filter applied:', message.channels);
+            break;
         }
       };
       
       ws.onclose = () => {
         isConnected = false;
+        connectionHealth = 'disconnected';
         console.log('WebSocket connection closed');
         // Reconnect after 3 seconds
         setTimeout(connectWebSocket, 3000);
@@ -76,41 +118,11 @@
       
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        connectionHealth = 'error';
       };
     } catch (error) {
       console.error('Failed to connect to WebSocket:', error);
-    }
-  }
-  
-  function initializeAudio() {
-    try {
-      audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      
-      // Create oscillator
-      oscillator = audioContext.createOscillator();
-      gainNode = audioContext.createGain();
-      analyser = audioContext.createAnalyser();
-      
-      // Configure nodes
-      oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      
-      analyser.fftSize = 256;
-      dataArray = new Uint8Array(analyser.frequencyBinCount);
-      
-      // Connect nodes
-      oscillator.connect(gainNode);
-      gainNode.connect(analyser);
-      analyser.connect(audioContext.destination);
-      
-      // Start oscillator
-      oscillator.start();
-      
-      isAudioInitialized = true;
-      console.log('Audio initialized');
-    } catch (error) {
-      console.error('Failed to initialize audio:', error);
+      connectionHealth = 'error';
     }
   }
   
@@ -131,7 +143,7 @@
     }
     
     // Add to trades array (keep last 100 trades)
-    trades = [trade, ...trades.slice(0, 99)]; // Svelte reactivity fix
+    trades = [trade, ...trades.slice(0, 99)];
     
     // Update statistics
     tradeCount++;
@@ -146,50 +158,69 @@
     // Update volume intensity (0-1 scale)
     volumeIntensity = Math.min(trade.size / 10, 1); // Normalize to 10 BTC max
     
-    // Update audio
-    if (audioEnabled && isAudioInitialized) {
-      updateAudio(trade);
-    }
     // Play the click sound if audio is enabled
     if (audioEnabled && clickSound) {
       clickSound.currentTime = 0;
       clickSound.play();
     }
+    
     // Track largest trade
     if (!largestTrade || trade.size > largestTrade.size) {
       largestTrade = { ...trade };
-      largestTrade = { ...largestTrade }; // Svelte reactivity fix
     }
   }
   
-  function updateAudio(trade) {
-    if (!audioContext || !oscillator || !gainNode) return;
+  function processTicker(ticker) {
+    tickerData = {
+      bestBid: ticker.best_bid,
+      bestAsk: ticker.best_ask,
+      volume24h: ticker.volume_24h,
+      low24h: ticker.low_24h,
+      high24h: ticker.high_24h,
+      spread: ticker.best_ask - ticker.best_bid
+    };
     
-    const now = audioContext.currentTime;
-    
-    // Map trade size to frequency (larger trades = lower frequency)
-    const frequency = Math.max(100, 500 - (trade.size * 20));
-    
-    // Map volume intensity to gain (0-0.3 to avoid ear damage)
-    const gain = volumeIntensity * 0.3;
-    
-    // Different tones for buy/sell
-    const baseFreq = trade.side === 'buy' ? frequency : frequency * 0.8;
-    
-    // Set frequency and gain
-    oscillator.frequency.setValueAtTime(baseFreq, now);
-    gainNode.gain.setValueAtTime(gain, now);
-    
-    // Create a brief tone (attack and decay)
-    gainNode.gain.exponentialRampToValueAtTime(gain, now + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    // Update current price from ticker if no recent trades
+    if (!currentPrice || Math.abs(currentPrice - ticker.price) > 0.01) {
+      currentPrice = ticker.price;
+    }
+  }
+  
+  function processOrderBookSnapshot(snapshot) {
+    orderBook.bids = snapshot.bids.slice(0, 10);
+    orderBook.asks = snapshot.asks.slice(0, 10);
+    updateOrderBookStats();
+  }
+  
+  function processOrderBookUpdate(update) {
+    // This is a simplified update - in production you'd want to maintain the full order book
+    // For now, we'll just track the stats from the backend
+    updateOrderBookStats();
+  }
+  
+  function updateOrderBookStats() {
+    if (orderBook.bids.length > 0 && orderBook.asks.length > 0) {
+      const topBid = parseFloat(orderBook.bids[0][0]);
+      const topAsk = parseFloat(orderBook.asks[0][0]);
+      orderBook.spread = topAsk - topBid;
+      
+      // Calculate depth (total volume in top 10 levels)
+      orderBook.bidDepth = orderBook.bids.reduce((sum, [price, size]) => sum + parseFloat(size), 0);
+      orderBook.askDepth = orderBook.asks.reduce((sum, [price, size]) => sum + parseFloat(size), 0);
+    }
+  }
+  
+  function processHeartbeat(heartbeat) {
+    lastHeartbeat = new Date(heartbeat.timestamp);
+    connectionHealth = 'healthy';
+  }
+  
+  function processStatus(status) {
+    console.log('Status update:', status);
   }
   
   function toggleAudio() {
     audioEnabled = !audioEnabled;
-    if (!audioEnabled && gainNode) {
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    }
   }
   
   function formatPrice(price) {
@@ -205,18 +236,46 @@
     return size.toFixed(6);
   }
   
+  function formatVolume(volume) {
+    if (volume >= 1000000) {
+      return (volume / 1000000).toFixed(2) + 'M';
+    } else if (volume >= 1000) {
+      return (volume / 1000).toFixed(2) + 'K';
+    }
+    return volume.toFixed(2);
+  }
+  
   function formatTime(timestamp) {
     return new Date(timestamp).toLocaleTimeString();
+  }
+  
+  function getConnectionStatus() {
+    if (!isConnected) return 'disconnected';
+    if (lastHeartbeat && (Date.now() - lastHeartbeat.getTime()) > 30000) {
+      return 'stale';
+    }
+    return connectionHealth;
   }
 </script>
 
 <main>
   <div class="container">
     <header>
-      <h1>🎵 BTC Live Tape Audio Visualizer</h1>
+      <h1>🎵 BTC Live Multi-Channel Audio Visualizer</h1>
       <div class="connection-status">
-        <span class="status-indicator {isConnected ? 'connected' : 'disconnected'}"></span>
-        {isConnected ? 'Connected' : 'Disconnected'}
+        <span class="status-indicator {getConnectionStatus()}"></span>
+        <span class="status-text">
+          {#if isConnected}
+            Connected ({getConnectionStatus()})
+          {:else}
+            Disconnected
+          {/if}
+        </span>
+        {#if lastHeartbeat}
+          <span class="heartbeat-time">
+            Last heartbeat: {formatTime(lastHeartbeat)}
+          </span>
+        {/if}
       </div>
     </header>
     
@@ -242,6 +301,7 @@
       </div>
     </div>
 
+    <!-- Enhanced Stats Grid -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-label">Trades/Second</div>
@@ -255,6 +315,18 @@
         <div class="stat-label">Avg Trade Size</div>
         <div class="stat-value">{formatSize(avgTradeSize)} BTC</div>
       </div>
+      <div class="stat-card">
+        <div class="stat-label">24h Volume</div>
+        <div class="stat-value">{formatVolume(tickerData.volume24h)} BTC</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">24h High</div>
+        <div class="stat-value">{formatPrice(tickerData.high24h)}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">24h Low</div>
+        <div class="stat-value">{formatPrice(tickerData.low24h)}</div>
+      </div>
       {#if largestTrade}
       <div class="stat-card largest-trade-card {largestTrade.side}">
         <div class="stat-label">Largest Trade</div>
@@ -266,6 +338,59 @@
         </div>
       </div>
       {/if}
+    </div>
+
+    <!-- Order Book Section -->
+    <div class="orderbook-section">
+      <h2>Order Book</h2>
+      <div class="orderbook-stats">
+        <div class="stat-card">
+          <div class="stat-label">Spread</div>
+          <div class="stat-value">{formatPrice(tickerData.spread)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Best Bid</div>
+          <div class="stat-value">{formatPrice(tickerData.bestBid)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Best Ask</div>
+          <div class="stat-value">{formatPrice(tickerData.bestAsk)}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Bid Depth</div>
+          <div class="stat-value">{formatSize(orderBook.bidDepth)} BTC</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Ask Depth</div>
+          <div class="stat-value">{formatSize(orderBook.askDepth)} BTC</div>
+        </div>
+      </div>
+      
+      <div class="orderbook-display">
+        <div class="orderbook-side">
+          <h3>Bids</h3>
+          <div class="orderbook-orders">
+            {#each orderBook.bids as [price, size]}
+              <div class="order-row bid">
+                <span class="order-price">{formatPrice(parseFloat(price))}</span>
+                <span class="order-size">{formatSize(parseFloat(size))}</span>
+              </div>
+            {/each}
+          </div>
+        </div>
+        
+        <div class="orderbook-side">
+          <h3>Asks</h3>
+          <div class="orderbook-orders">
+            {#each orderBook.asks as [price, size]}
+              <div class="order-row ask">
+                <span class="order-price">{formatPrice(parseFloat(price))}</span>
+                <span class="order-size">{formatSize(parseFloat(size))}</span>
+              </div>
+            {/each}
+          </div>
+        </div>
+      </div>
     </div>
     
     <div class="trades-section">
@@ -285,6 +410,7 @@
     <div class="visualizer">
       <div class="volume-bar">
         <div class="volume-fill" style="width: {volumeIntensity * 100}%"></div>
+        <div class="volume-label">Volume Intensity</div>
       </div>
       <div class="pulse-indicator {audioEnabled ? 'active' : ''}"></div>
     </div>
@@ -302,7 +428,7 @@
   }
   
   .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
   }
@@ -324,6 +450,7 @@
     justify-content: center;
     gap: 10px;
     font-size: 1.1em;
+    flex-wrap: wrap;
   }
   
   .status-indicator {
@@ -334,9 +461,25 @@
     transition: background 0.3s;
   }
   
-  .status-indicator.connected {
+  .status-indicator.healthy {
     background: #44ff44;
     box-shadow: 0 0 10px rgba(68, 255, 68, 0.5);
+  }
+  
+  .status-indicator.stale {
+    background: #ffaa44;
+    box-shadow: 0 0 10px rgba(255, 170, 68, 0.5);
+  }
+  
+  .status-indicator.disconnected,
+  .status-indicator.error {
+    background: #ff4444;
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+  }
+  
+  .heartbeat-time {
+    font-size: 0.9em;
+    opacity: 0.7;
   }
   
   .controls {
@@ -408,14 +551,14 @@
   
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
     margin-bottom: 30px;
   }
   
   .stat-card {
     background: rgba(255, 255, 255, 0.1);
-    padding: 20px;
+    padding: 15px;
     border-radius: 10px;
     text-align: center;
     backdrop-filter: blur(5px);
@@ -428,8 +571,60 @@
   }
   
   .stat-value {
-    font-size: 1.5em;
+    font-size: 1.3em;
     font-weight: bold;
+  }
+  
+  .orderbook-section {
+    margin-bottom: 30px;
+  }
+  
+  .orderbook-section h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .orderbook-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .orderbook-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  
+  .orderbook-side h3 {
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .orderbook-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .order-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+  
+  .order-row.bid {
+    background: rgba(68, 255, 68, 0.1);
+  }
+  
+  .order-row.ask {
+    background: rgba(255, 68, 68, 0.1);
   }
   
   .trades-section {
@@ -480,10 +675,11 @@
   }
   
   .volume-bar {
+    position: relative;
     width: 100%;
-    height: 20px;
+    height: 25px;
     background: rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
   }
@@ -492,6 +688,17 @@
     height: 100%;
     background: linear-gradient(90deg, #44ff44, #ffff44, #ff4444);
     transition: width 0.3s;
+  }
+  
+  .volume-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
   }
   
   .pulse-indicator {
@@ -515,17 +722,6 @@
     100% { transform: scale(1); }
   }
   
-  @media (max-width: 768px) {
-    .price-value {
-      font-size: 2em;
-    }
-    
-    .trade-item {
-      grid-template-columns: 50px 100px 100px 80px;
-      font-size: 0.8em;
-    }
-  }
-
   .largest-trade-card {
     background: rgba(255, 255, 255, 0.15);
     border-radius: 10px;
@@ -536,12 +732,15 @@
     max-width: 220px;
     margin: 0 auto;
   }
+  
   .largest-trade-card.buy {
     border-left: 4px solid #44ff44;
   }
+  
   .largest-trade-card.sell {
     border-left: 4px solid #ff4444;
   }
+  
   .largest-trade-card .stat-details {
     display: flex;
     flex-direction: column;
@@ -549,7 +748,27 @@
     font-size: 0.95em;
     margin-top: 6px;
   }
+  
   .largest-trade-card .trade-side {
     font-weight: bold;
+  }
+  
+  @media (max-width: 768px) {
+    .price-value {
+      font-size: 2em;
+    }
+    
+    .trade-item {
+      grid-template-columns: 50px 100px 100px 80px;
+      font-size: 0.8em;
+    }
+    
+    .orderbook-display {
+      grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    }
   }
 </style>

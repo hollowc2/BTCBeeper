@@ -451,11 +451,129 @@ var app = (function () {
 
     function get_each_context(ctx, list, i) {
     	const child_ctx = ctx.slice();
-    	child_ctx[26] = list[i];
+    	child_ctx[29] = list[i];
     	return child_ctx;
     }
 
-    // (238:10) {:else}
+    function get_each_context_1(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[32] = list[i][0];
+    	child_ctx[33] = list[i][1];
+    	return child_ctx;
+    }
+
+    function get_each_context_2(ctx, list, i) {
+    	const child_ctx = ctx.slice();
+    	child_ctx[32] = list[i][0];
+    	child_ctx[33] = list[i][1];
+    	return child_ctx;
+    }
+
+    // (270:10) {:else}
+    function create_else_block_1(ctx) {
+    	let t;
+
+    	const block = {
+    		c: function create() {
+    			t = text("Disconnected");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t, anchor);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_else_block_1.name,
+    		type: "else",
+    		source: "(270:10) {:else}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (268:10) {#if isConnected}
+    function create_if_block_4(ctx) {
+    	let t0;
+    	let t1_value = /*getConnectionStatus*/ ctx[14]() + "";
+    	let t1;
+    	let t2;
+
+    	const block = {
+    		c: function create() {
+    			t0 = text("Connected (");
+    			t1 = text(t1_value);
+    			t2 = text(")");
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, t0, anchor);
+    			insert_dev(target, t1, anchor);
+    			insert_dev(target, t2, anchor);
+    		},
+    		p: noop,
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(t0);
+    			if (detaching) detach_dev(t1);
+    			if (detaching) detach_dev(t2);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_4.name,
+    		type: "if",
+    		source: "(268:10) {#if isConnected}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (274:8) {#if lastHeartbeat}
+    function create_if_block_3(ctx) {
+    	let span;
+    	let t0;
+    	let t1_value = formatTime(/*lastHeartbeat*/ ctx[9]) + "";
+    	let t1;
+
+    	const block = {
+    		c: function create() {
+    			span = element("span");
+    			t0 = text("Last heartbeat: ");
+    			t1 = text(t1_value);
+    			attr_dev(span, "class", "heartbeat-time svelte-94kqpu");
+    			add_location(span, file, 274, 10, 7389);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, span, anchor);
+    			append_dev(span, t0);
+    			append_dev(span, t1);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*lastHeartbeat*/ 512 && t1_value !== (t1_value = formatTime(/*lastHeartbeat*/ ctx[9]) + "")) set_data_dev(t1, t1_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(span);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_if_block_3.name,
+    		type: "if",
+    		source: "(274:8) {#if lastHeartbeat}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (297:10) {:else}
     function create_else_block(ctx) {
     	let t;
 
@@ -475,14 +593,14 @@ var app = (function () {
     		block,
     		id: create_else_block.name,
     		type: "else",
-    		source: "(238:10) {:else}",
+    		source: "(297:10) {:else}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (236:46) 
+    // (295:46) 
     function create_if_block_2(ctx) {
     	let t;
 
@@ -502,14 +620,14 @@ var app = (function () {
     		block,
     		id: create_if_block_2.name,
     		type: "if",
-    		source: "(236:46) ",
+    		source: "(295:46) ",
     		ctx
     	});
 
     	return block;
     }
 
-    // (234:10) {#if priceDirection === 'up'}
+    // (293:10) {#if priceDirection === 'up'}
     function create_if_block_1(ctx) {
     	let t;
 
@@ -529,14 +647,14 @@ var app = (function () {
     		block,
     		id: create_if_block_1.name,
     		type: "if",
-    		source: "(234:10) {#if priceDirection === 'up'}",
+    		source: "(293:10) {#if priceDirection === 'up'}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (258:6) {#if largestTrade}
+    // (330:6) {#if largestTrade}
     function create_if_block(ctx) {
     	let div3;
     	let div0;
@@ -579,20 +697,20 @@ var app = (function () {
     			t8 = space();
     			span2 = element("span");
     			t9 = text(t9_value);
-    			attr_dev(div0, "class", "stat-label svelte-1ubwts6");
-    			add_location(div0, file, 259, 8, 7221);
-    			attr_dev(div1, "class", "stat-value svelte-1ubwts6");
-    			add_location(div1, file, 260, 8, 7273);
-    			attr_dev(span0, "class", "trade-side svelte-1ubwts6");
-    			add_location(span0, file, 262, 10, 7384);
+    			attr_dev(div0, "class", "stat-label svelte-94kqpu");
+    			add_location(div0, file, 331, 8, 9329);
+    			attr_dev(div1, "class", "stat-value svelte-94kqpu");
+    			add_location(div1, file, 332, 8, 9381);
+    			attr_dev(span0, "class", "trade-side svelte-94kqpu");
+    			add_location(span0, file, 334, 10, 9492);
     			attr_dev(span1, "class", "trade-price");
-    			add_location(span1, file, 263, 10, 7460);
+    			add_location(span1, file, 335, 10, 9568);
     			attr_dev(span2, "class", "trade-time");
-    			add_location(span2, file, 264, 10, 7537);
-    			attr_dev(div2, "class", "stat-details svelte-1ubwts6");
-    			add_location(div2, file, 261, 8, 7347);
-    			attr_dev(div3, "class", div3_class_value = "stat-card largest-trade-card " + /*largestTrade*/ ctx[6].side + " svelte-1ubwts6");
-    			add_location(div3, file, 258, 6, 7150);
+    			add_location(span2, file, 336, 10, 9645);
+    			attr_dev(div2, "class", "stat-details svelte-94kqpu");
+    			add_location(div2, file, 333, 8, 9455);
+    			attr_dev(div3, "class", div3_class_value = "stat-card largest-trade-card " + /*largestTrade*/ ctx[6].side + " svelte-94kqpu");
+    			add_location(div3, file, 330, 6, 9258);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div3, anchor);
@@ -613,12 +731,12 @@ var app = (function () {
     			append_dev(span2, t9);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*largestTrade*/ 64 && t2_value !== (t2_value = formatSize(/*largestTrade*/ ctx[6].size) + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*largestTrade*/ 64 && t5_value !== (t5_value = /*largestTrade*/ ctx[6].side.toUpperCase() + "")) set_data_dev(t5, t5_value);
-    			if (dirty & /*largestTrade*/ 64 && t7_value !== (t7_value = formatPrice(/*largestTrade*/ ctx[6].price) + "")) set_data_dev(t7, t7_value);
-    			if (dirty & /*largestTrade*/ 64 && t9_value !== (t9_value = formatTime(/*largestTrade*/ ctx[6].timestamp) + "")) set_data_dev(t9, t9_value);
+    			if (dirty[0] & /*largestTrade*/ 64 && t2_value !== (t2_value = formatSize(/*largestTrade*/ ctx[6].size) + "")) set_data_dev(t2, t2_value);
+    			if (dirty[0] & /*largestTrade*/ 64 && t5_value !== (t5_value = /*largestTrade*/ ctx[6].side.toUpperCase() + "")) set_data_dev(t5, t5_value);
+    			if (dirty[0] & /*largestTrade*/ 64 && t7_value !== (t7_value = formatPrice(/*largestTrade*/ ctx[6].price) + "")) set_data_dev(t7, t7_value);
+    			if (dirty[0] & /*largestTrade*/ 64 && t9_value !== (t9_value = formatTime(/*largestTrade*/ ctx[6].timestamp) + "")) set_data_dev(t9, t9_value);
 
-    			if (dirty & /*largestTrade*/ 64 && div3_class_value !== (div3_class_value = "stat-card largest-trade-card " + /*largestTrade*/ ctx[6].side + " svelte-1ubwts6")) {
+    			if (dirty[0] & /*largestTrade*/ 64 && div3_class_value !== (div3_class_value = "stat-card largest-trade-card " + /*largestTrade*/ ctx[6].side + " svelte-94kqpu")) {
     				attr_dev(div3, "class", div3_class_value);
     			}
     		},
@@ -631,31 +749,145 @@ var app = (function () {
     		block,
     		id: create_if_block.name,
     		type: "if",
-    		source: "(258:6) {#if largestTrade}",
+    		source: "(330:6) {#if largestTrade}",
     		ctx
     	});
 
     	return block;
     }
 
-    // (274:8) {#each trades.slice(0, 10) as trade}
-    function create_each_block(ctx) {
+    // (373:12) {#each orderBook.bids as [price, size]}
+    function create_each_block_2(ctx) {
     	let div;
     	let span0;
-    	let t0_value = /*trade*/ ctx[26].side.toUpperCase() + "";
+    	let t0_value = formatPrice(parseFloat(/*price*/ ctx[32])) + "";
     	let t0;
     	let t1;
     	let span1;
-    	let t2_value = formatSize(/*trade*/ ctx[26].size) + "";
+    	let t2_value = formatSize(parseFloat(/*size*/ ctx[33])) + "";
+    	let t2;
+    	let t3;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			span1 = element("span");
+    			t2 = text(t2_value);
+    			t3 = space();
+    			attr_dev(span0, "class", "order-price");
+    			add_location(span0, file, 374, 16, 11021);
+    			attr_dev(span1, "class", "order-size");
+    			add_location(span1, file, 375, 16, 11103);
+    			attr_dev(div, "class", "order-row bid svelte-94kqpu");
+    			add_location(div, file, 373, 14, 10977);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, span0);
+    			append_dev(span0, t0);
+    			append_dev(div, t1);
+    			append_dev(div, span1);
+    			append_dev(span1, t2);
+    			append_dev(div, t3);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*orderBook*/ 256 && t0_value !== (t0_value = formatPrice(parseFloat(/*price*/ ctx[32])) + "")) set_data_dev(t0, t0_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t2_value !== (t2_value = formatSize(parseFloat(/*size*/ ctx[33])) + "")) set_data_dev(t2, t2_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_2.name,
+    		type: "each",
+    		source: "(373:12) {#each orderBook.bids as [price, size]}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (385:12) {#each orderBook.asks as [price, size]}
+    function create_each_block_1(ctx) {
+    	let div;
+    	let span0;
+    	let t0_value = formatPrice(parseFloat(/*price*/ ctx[32])) + "";
+    	let t0;
+    	let t1;
+    	let span1;
+    	let t2_value = formatSize(parseFloat(/*size*/ ctx[33])) + "";
+    	let t2;
+    	let t3;
+
+    	const block = {
+    		c: function create() {
+    			div = element("div");
+    			span0 = element("span");
+    			t0 = text(t0_value);
+    			t1 = space();
+    			span1 = element("span");
+    			t2 = text(t2_value);
+    			t3 = space();
+    			attr_dev(span0, "class", "order-price");
+    			add_location(span0, file, 386, 16, 11460);
+    			attr_dev(span1, "class", "order-size");
+    			add_location(span1, file, 387, 16, 11542);
+    			attr_dev(div, "class", "order-row ask svelte-94kqpu");
+    			add_location(div, file, 385, 14, 11416);
+    		},
+    		m: function mount(target, anchor) {
+    			insert_dev(target, div, anchor);
+    			append_dev(div, span0);
+    			append_dev(span0, t0);
+    			append_dev(div, t1);
+    			append_dev(div, span1);
+    			append_dev(span1, t2);
+    			append_dev(div, t3);
+    		},
+    		p: function update(ctx, dirty) {
+    			if (dirty[0] & /*orderBook*/ 256 && t0_value !== (t0_value = formatPrice(parseFloat(/*price*/ ctx[32])) + "")) set_data_dev(t0, t0_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t2_value !== (t2_value = formatSize(parseFloat(/*size*/ ctx[33])) + "")) set_data_dev(t2, t2_value);
+    		},
+    		d: function destroy(detaching) {
+    			if (detaching) detach_dev(div);
+    		}
+    	};
+
+    	dispatch_dev("SvelteRegisterBlock", {
+    		block,
+    		id: create_each_block_1.name,
+    		type: "each",
+    		source: "(385:12) {#each orderBook.asks as [price, size]}",
+    		ctx
+    	});
+
+    	return block;
+    }
+
+    // (399:8) {#each trades.slice(0, 10) as trade}
+    function create_each_block(ctx) {
+    	let div;
+    	let span0;
+    	let t0_value = /*trade*/ ctx[29].side.toUpperCase() + "";
+    	let t0;
+    	let t1;
+    	let span1;
+    	let t2_value = formatSize(/*trade*/ ctx[29].size) + "";
     	let t2;
     	let t3;
     	let t4;
     	let span2;
-    	let t5_value = formatPrice(/*trade*/ ctx[26].price) + "";
+    	let t5_value = formatPrice(/*trade*/ ctx[29].price) + "";
     	let t5;
     	let t6;
     	let span3;
-    	let t7_value = formatTime(/*trade*/ ctx[26].timestamp) + "";
+    	let t7_value = formatTime(/*trade*/ ctx[29].timestamp) + "";
     	let t7;
     	let t8;
     	let div_class_value;
@@ -676,16 +908,16 @@ var app = (function () {
     			span3 = element("span");
     			t7 = text(t7_value);
     			t8 = space();
-    			attr_dev(span0, "class", "trade-side svelte-1ubwts6");
-    			add_location(span0, file, 275, 12, 7861);
+    			attr_dev(span0, "class", "trade-side svelte-94kqpu");
+    			add_location(span0, file, 400, 12, 11906);
     			attr_dev(span1, "class", "trade-size");
-    			add_location(span1, file, 276, 12, 7932);
+    			add_location(span1, file, 401, 12, 11977);
     			attr_dev(span2, "class", "trade-price");
-    			add_location(span2, file, 277, 12, 8005);
+    			add_location(span2, file, 402, 12, 12050);
     			attr_dev(span3, "class", "trade-time");
-    			add_location(span3, file, 278, 12, 8077);
-    			attr_dev(div, "class", div_class_value = "trade-item " + /*trade*/ ctx[26].side + " svelte-1ubwts6");
-    			add_location(div, file, 274, 10, 7811);
+    			add_location(span3, file, 403, 12, 12122);
+    			attr_dev(div, "class", div_class_value = "trade-item " + /*trade*/ ctx[29].side + " svelte-94kqpu");
+    			add_location(div, file, 399, 10, 11856);
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, div, anchor);
@@ -704,12 +936,12 @@ var app = (function () {
     			append_dev(div, t8);
     		},
     		p: function update(ctx, dirty) {
-    			if (dirty & /*trades*/ 4 && t0_value !== (t0_value = /*trade*/ ctx[26].side.toUpperCase() + "")) set_data_dev(t0, t0_value);
-    			if (dirty & /*trades*/ 4 && t2_value !== (t2_value = formatSize(/*trade*/ ctx[26].size) + "")) set_data_dev(t2, t2_value);
-    			if (dirty & /*trades*/ 4 && t5_value !== (t5_value = formatPrice(/*trade*/ ctx[26].price) + "")) set_data_dev(t5, t5_value);
-    			if (dirty & /*trades*/ 4 && t7_value !== (t7_value = formatTime(/*trade*/ ctx[26].timestamp) + "")) set_data_dev(t7, t7_value);
+    			if (dirty[0] & /*trades*/ 4 && t0_value !== (t0_value = /*trade*/ ctx[29].side.toUpperCase() + "")) set_data_dev(t0, t0_value);
+    			if (dirty[0] & /*trades*/ 4 && t2_value !== (t2_value = formatSize(/*trade*/ ctx[29].size) + "")) set_data_dev(t2, t2_value);
+    			if (dirty[0] & /*trades*/ 4 && t5_value !== (t5_value = formatPrice(/*trade*/ ctx[29].price) + "")) set_data_dev(t5, t5_value);
+    			if (dirty[0] & /*trades*/ 4 && t7_value !== (t7_value = formatTime(/*trade*/ ctx[29].timestamp) + "")) set_data_dev(t7, t7_value);
 
-    			if (dirty & /*trades*/ 4 && div_class_value !== (div_class_value = "trade-item " + /*trade*/ ctx[26].side + " svelte-1ubwts6")) {
+    			if (dirty[0] & /*trades*/ 4 && div_class_value !== (div_class_value = "trade-item " + /*trade*/ ctx[29].side + " svelte-94kqpu")) {
     				attr_dev(div, "class", div_class_value);
     			}
     		},
@@ -722,7 +954,7 @@ var app = (function () {
     		block,
     		id: create_each_block.name,
     		type: "each",
-    		source: "(274:8) {#each trades.slice(0, 10) as trade}",
+    		source: "(399:8) {#each trades.slice(0, 10) as trade}",
     		ctx
     	});
 
@@ -731,20 +963,23 @@ var app = (function () {
 
     function create_fragment(ctx) {
     	let main;
-    	let div23;
+    	let div55;
     	let header;
     	let h1;
     	let t1;
     	let div0;
-    	let span;
-    	let span_class_value;
+    	let span0;
     	let t2;
-    	let t3_value = (/*isConnected*/ ctx[0] ? 'Connected' : 'Disconnected') + "";
+    	let span1;
     	let t3;
     	let t4;
     	let div1;
     	let button;
-    	let t5_value = (/*audioEnabled*/ ctx[9] ? '🔊 Audio On' : '🔇 Audio Off') + "";
+
+    	let t5_value = (/*audioEnabled*/ ctx[12]
+    	? '🔊 Audio On'
+    	: '🔇 Audio Off') + "";
+
     	let t5;
     	let button_class_value;
     	let t6;
@@ -759,7 +994,7 @@ var app = (function () {
     	let div4;
     	let div5_class_value;
     	let t11;
-    	let div16;
+    	let div25;
     	let div9;
     	let div7;
     	let t13;
@@ -781,30 +1016,131 @@ var app = (function () {
     	let t22;
     	let t23;
     	let t24;
-    	let t25;
     	let div18;
-    	let h2;
-    	let t27;
+    	let div16;
+    	let t26;
     	let div17;
+    	let t27_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "";
+    	let t27;
     	let t28;
-    	let div22;
-    	let div20;
-    	let div19;
     	let t29;
     	let div21;
-    	let div21_class_value;
+    	let div19;
+    	let t31;
+    	let div20;
+    	let t32_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "";
+    	let t32;
+    	let t33;
+    	let div24;
+    	let div22;
+    	let t35;
+    	let div23;
+    	let t36_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "";
+    	let t36;
+    	let t37;
+    	let t38;
+    	let div47;
+    	let h20;
+    	let t40;
+    	let div41;
+    	let div28;
+    	let div26;
+    	let t42;
+    	let div27;
+    	let t43_value = formatPrice(/*tickerData*/ ctx[7].spread) + "";
+    	let t43;
+    	let t44;
+    	let div31;
+    	let div29;
+    	let t46;
+    	let div30;
+    	let t47_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "";
+    	let t47;
+    	let t48;
+    	let div34;
+    	let div32;
+    	let t50;
+    	let div33;
+    	let t51_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "";
+    	let t51;
+    	let t52;
+    	let div37;
+    	let div35;
+    	let t54;
+    	let div36;
+    	let t55_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "";
+    	let t55;
+    	let t56;
+    	let t57;
+    	let div40;
+    	let div38;
+    	let t59;
+    	let div39;
+    	let t60_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "";
+    	let t60;
+    	let t61;
+    	let t62;
+    	let div46;
+    	let div43;
+    	let h30;
+    	let t64;
+    	let div42;
+    	let t65;
+    	let div45;
+    	let h31;
+    	let t67;
+    	let div44;
+    	let t68;
+    	let div49;
+    	let h21;
+    	let t70;
+    	let div48;
+    	let t71;
+    	let div54;
+    	let div52;
+    	let div50;
+    	let t72;
+    	let div51;
+    	let t74;
+    	let div53;
+    	let div53_class_value;
     	let mounted;
     	let dispose;
 
     	function select_block_type(ctx, dirty) {
-    		if (/*priceDirection*/ ctx[7] === 'up') return create_if_block_1;
-    		if (/*priceDirection*/ ctx[7] === 'down') return create_if_block_2;
-    		return create_else_block;
+    		if (/*isConnected*/ ctx[0]) return create_if_block_4;
+    		return create_else_block_1;
     	}
 
     	let current_block_type = select_block_type(ctx);
     	let if_block0 = current_block_type(ctx);
-    	let if_block1 = /*largestTrade*/ ctx[6] && create_if_block(ctx);
+    	let if_block1 = /*lastHeartbeat*/ ctx[9] && create_if_block_3(ctx);
+
+    	function select_block_type_1(ctx, dirty) {
+    		if (/*priceDirection*/ ctx[10] === 'up') return create_if_block_1;
+    		if (/*priceDirection*/ ctx[10] === 'down') return create_if_block_2;
+    		return create_else_block;
+    	}
+
+    	let current_block_type_1 = select_block_type_1(ctx);
+    	let if_block2 = current_block_type_1(ctx);
+    	let if_block3 = /*largestTrade*/ ctx[6] && create_if_block(ctx);
+    	let each_value_2 = /*orderBook*/ ctx[8].bids;
+    	validate_each_argument(each_value_2);
+    	let each_blocks_2 = [];
+
+    	for (let i = 0; i < each_value_2.length; i += 1) {
+    		each_blocks_2[i] = create_each_block_2(get_each_context_2(ctx, each_value_2, i));
+    	}
+
+    	let each_value_1 = /*orderBook*/ ctx[8].asks;
+    	validate_each_argument(each_value_1);
+    	let each_blocks_1 = [];
+
+    	for (let i = 0; i < each_value_1.length; i += 1) {
+    		each_blocks_1[i] = create_each_block_1(get_each_context_1(ctx, each_value_1, i));
+    	}
+
     	let each_value = /*trades*/ ctx[2].slice(0, 10);
     	validate_each_argument(each_value);
     	let each_blocks = [];
@@ -816,15 +1152,18 @@ var app = (function () {
     	const block = {
     		c: function create() {
     			main = element("main");
-    			div23 = element("div");
+    			div55 = element("div");
     			header = element("header");
     			h1 = element("h1");
-    			h1.textContent = "🎵 BTC Live Tape Audio Visualizer";
+    			h1.textContent = "🎵 BTC Live Multi-Channel Audio Visualizer";
     			t1 = space();
     			div0 = element("div");
-    			span = element("span");
+    			span0 = element("span");
     			t2 = space();
-    			t3 = text(t3_value);
+    			span1 = element("span");
+    			if_block0.c();
+    			t3 = space();
+    			if (if_block1) if_block1.c();
     			t4 = space();
     			div1 = element("div");
     			button = element("button");
@@ -839,9 +1178,9 @@ var app = (function () {
     			t9 = text(t9_value);
     			t10 = space();
     			div4 = element("div");
-    			if_block0.c();
+    			if_block2.c();
     			t11 = space();
-    			div16 = element("div");
+    			div25 = element("div");
     			div9 = element("div");
     			div7 = element("div");
     			div7.textContent = "Trades/Second";
@@ -864,104 +1203,269 @@ var app = (function () {
     			t22 = text(t22_value);
     			t23 = text(" BTC");
     			t24 = space();
-    			if (if_block1) if_block1.c();
-    			t25 = space();
     			div18 = element("div");
-    			h2 = element("h2");
-    			h2.textContent = "Recent Trades";
-    			t27 = space();
+    			div16 = element("div");
+    			div16.textContent = "24h Volume";
+    			t26 = space();
     			div17 = element("div");
+    			t27 = text(t27_value);
+    			t28 = text(" BTC");
+    			t29 = space();
+    			div21 = element("div");
+    			div19 = element("div");
+    			div19.textContent = "24h High";
+    			t31 = space();
+    			div20 = element("div");
+    			t32 = text(t32_value);
+    			t33 = space();
+    			div24 = element("div");
+    			div22 = element("div");
+    			div22.textContent = "24h Low";
+    			t35 = space();
+    			div23 = element("div");
+    			t36 = text(t36_value);
+    			t37 = space();
+    			if (if_block3) if_block3.c();
+    			t38 = space();
+    			div47 = element("div");
+    			h20 = element("h2");
+    			h20.textContent = "Order Book";
+    			t40 = space();
+    			div41 = element("div");
+    			div28 = element("div");
+    			div26 = element("div");
+    			div26.textContent = "Spread";
+    			t42 = space();
+    			div27 = element("div");
+    			t43 = text(t43_value);
+    			t44 = space();
+    			div31 = element("div");
+    			div29 = element("div");
+    			div29.textContent = "Best Bid";
+    			t46 = space();
+    			div30 = element("div");
+    			t47 = text(t47_value);
+    			t48 = space();
+    			div34 = element("div");
+    			div32 = element("div");
+    			div32.textContent = "Best Ask";
+    			t50 = space();
+    			div33 = element("div");
+    			t51 = text(t51_value);
+    			t52 = space();
+    			div37 = element("div");
+    			div35 = element("div");
+    			div35.textContent = "Bid Depth";
+    			t54 = space();
+    			div36 = element("div");
+    			t55 = text(t55_value);
+    			t56 = text(" BTC");
+    			t57 = space();
+    			div40 = element("div");
+    			div38 = element("div");
+    			div38.textContent = "Ask Depth";
+    			t59 = space();
+    			div39 = element("div");
+    			t60 = text(t60_value);
+    			t61 = text(" BTC");
+    			t62 = space();
+    			div46 = element("div");
+    			div43 = element("div");
+    			h30 = element("h3");
+    			h30.textContent = "Bids";
+    			t64 = space();
+    			div42 = element("div");
+
+    			for (let i = 0; i < each_blocks_2.length; i += 1) {
+    				each_blocks_2[i].c();
+    			}
+
+    			t65 = space();
+    			div45 = element("div");
+    			h31 = element("h3");
+    			h31.textContent = "Asks";
+    			t67 = space();
+    			div44 = element("div");
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				each_blocks_1[i].c();
+    			}
+
+    			t68 = space();
+    			div49 = element("div");
+    			h21 = element("h2");
+    			h21.textContent = "Recent Trades";
+    			t70 = space();
+    			div48 = element("div");
 
     			for (let i = 0; i < each_blocks.length; i += 1) {
     				each_blocks[i].c();
     			}
 
-    			t28 = space();
-    			div22 = element("div");
-    			div20 = element("div");
-    			div19 = element("div");
-    			t29 = space();
-    			div21 = element("div");
-    			attr_dev(h1, "class", "svelte-1ubwts6");
-    			add_location(h1, file, 215, 6, 5699);
-    			attr_dev(span, "class", span_class_value = "status-indicator " + (/*isConnected*/ ctx[0] ? 'connected' : 'disconnected') + " svelte-1ubwts6");
-    			add_location(span, file, 217, 8, 5788);
-    			attr_dev(div0, "class", "connection-status svelte-1ubwts6");
-    			add_location(div0, file, 216, 6, 5748);
-    			attr_dev(header, "class", "svelte-1ubwts6");
-    			add_location(header, file, 214, 4, 5684);
-    			attr_dev(button, "class", button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[9] ? 'enabled' : 'disabled') + " svelte-1ubwts6");
-    			add_location(button, file, 223, 6, 5990);
-    			attr_dev(div1, "class", "controls svelte-1ubwts6");
-    			add_location(div1, file, 222, 4, 5961);
-    			attr_dev(div2, "class", "price-label svelte-1ubwts6");
-    			add_location(div2, file, 230, 8, 6258);
-    			attr_dev(div3, "class", "price-value svelte-1ubwts6");
-    			add_location(div3, file, 231, 8, 6305);
-    			attr_dev(div4, "class", "price-change svelte-1ubwts6");
-    			add_location(div4, file, 232, 8, 6372);
-    			attr_dev(div5, "class", div5_class_value = "current-price " + /*priceDirection*/ ctx[7] + " svelte-1ubwts6");
-    			add_location(div5, file, 229, 6, 6205);
-    			attr_dev(div6, "class", "price-section svelte-1ubwts6");
-    			add_location(div6, file, 228, 4, 6171);
-    			attr_dev(div7, "class", "stat-label svelte-1ubwts6");
-    			add_location(div7, file, 246, 8, 6685);
-    			attr_dev(div8, "class", "stat-value svelte-1ubwts6");
-    			add_location(div8, file, 247, 8, 6737);
-    			attr_dev(div9, "class", "stat-card svelte-1ubwts6");
-    			add_location(div9, file, 245, 6, 6653);
-    			attr_dev(div10, "class", "stat-label svelte-1ubwts6");
-    			add_location(div10, file, 250, 8, 6847);
-    			attr_dev(div11, "class", "stat-value svelte-1ubwts6");
-    			add_location(div11, file, 251, 8, 6898);
-    			attr_dev(div12, "class", "stat-card svelte-1ubwts6");
-    			add_location(div12, file, 249, 6, 6815);
-    			attr_dev(div13, "class", "stat-label svelte-1ubwts6");
-    			add_location(div13, file, 254, 8, 6992);
-    			attr_dev(div14, "class", "stat-value svelte-1ubwts6");
-    			add_location(div14, file, 255, 8, 7045);
-    			attr_dev(div15, "class", "stat-card svelte-1ubwts6");
-    			add_location(div15, file, 253, 6, 6960);
-    			attr_dev(div16, "class", "stats-grid svelte-1ubwts6");
-    			add_location(div16, file, 244, 4, 6622);
-    			attr_dev(h2, "class", "svelte-1ubwts6");
-    			add_location(h2, file, 271, 6, 7701);
-    			attr_dev(div17, "class", "trades-list svelte-1ubwts6");
-    			add_location(div17, file, 272, 6, 7730);
-    			attr_dev(div18, "class", "trades-section svelte-1ubwts6");
-    			add_location(div18, file, 270, 4, 7666);
-    			attr_dev(div19, "class", "volume-fill svelte-1ubwts6");
-    			set_style(div19, "width", /*volumeIntensity*/ ctx[8] * 100 + "%");
-    			add_location(div19, file, 286, 8, 8269);
-    			attr_dev(div20, "class", "volume-bar svelte-1ubwts6");
-    			add_location(div20, file, 285, 6, 8236);
-    			attr_dev(div21, "class", div21_class_value = "pulse-indicator " + (/*audioEnabled*/ ctx[9] ? 'active' : '') + " svelte-1ubwts6");
-    			add_location(div21, file, 288, 6, 8360);
-    			attr_dev(div22, "class", "visualizer svelte-1ubwts6");
-    			add_location(div22, file, 284, 4, 8205);
-    			attr_dev(div23, "class", "container svelte-1ubwts6");
-    			add_location(div23, file, 213, 2, 5656);
-    			add_location(main, file, 212, 0, 5647);
+    			t71 = space();
+    			div54 = element("div");
+    			div52 = element("div");
+    			div50 = element("div");
+    			t72 = space();
+    			div51 = element("div");
+    			div51.textContent = "Volume Intensity";
+    			t74 = space();
+    			div53 = element("div");
+    			attr_dev(h1, "class", "svelte-94kqpu");
+    			add_location(h1, file, 263, 6, 7004);
+    			attr_dev(span0, "class", "status-indicator " + /*getConnectionStatus*/ ctx[14]() + " svelte-94kqpu");
+    			add_location(span0, file, 265, 8, 7102);
+    			attr_dev(span1, "class", "status-text");
+    			add_location(span1, file, 266, 8, 7173);
+    			attr_dev(div0, "class", "connection-status svelte-94kqpu");
+    			add_location(div0, file, 264, 6, 7062);
+    			attr_dev(header, "class", "svelte-94kqpu");
+    			add_location(header, file, 262, 4, 6989);
+    			attr_dev(button, "class", button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[12] ? 'enabled' : 'disabled') + " svelte-94kqpu");
+    			add_location(button, file, 282, 6, 7572);
+    			attr_dev(div1, "class", "controls svelte-94kqpu");
+    			add_location(div1, file, 281, 4, 7543);
+    			attr_dev(div2, "class", "price-label svelte-94kqpu");
+    			add_location(div2, file, 289, 8, 7840);
+    			attr_dev(div3, "class", "price-value svelte-94kqpu");
+    			add_location(div3, file, 290, 8, 7887);
+    			attr_dev(div4, "class", "price-change svelte-94kqpu");
+    			add_location(div4, file, 291, 8, 7954);
+    			attr_dev(div5, "class", div5_class_value = "current-price " + /*priceDirection*/ ctx[10] + " svelte-94kqpu");
+    			add_location(div5, file, 288, 6, 7787);
+    			attr_dev(div6, "class", "price-section svelte-94kqpu");
+    			add_location(div6, file, 287, 4, 7753);
+    			attr_dev(div7, "class", "stat-label svelte-94kqpu");
+    			add_location(div7, file, 306, 8, 8300);
+    			attr_dev(div8, "class", "stat-value svelte-94kqpu");
+    			add_location(div8, file, 307, 8, 8352);
+    			attr_dev(div9, "class", "stat-card svelte-94kqpu");
+    			add_location(div9, file, 305, 6, 8268);
+    			attr_dev(div10, "class", "stat-label svelte-94kqpu");
+    			add_location(div10, file, 310, 8, 8462);
+    			attr_dev(div11, "class", "stat-value svelte-94kqpu");
+    			add_location(div11, file, 311, 8, 8513);
+    			attr_dev(div12, "class", "stat-card svelte-94kqpu");
+    			add_location(div12, file, 309, 6, 8430);
+    			attr_dev(div13, "class", "stat-label svelte-94kqpu");
+    			add_location(div13, file, 314, 8, 8607);
+    			attr_dev(div14, "class", "stat-value svelte-94kqpu");
+    			add_location(div14, file, 315, 8, 8660);
+    			attr_dev(div15, "class", "stat-card svelte-94kqpu");
+    			add_location(div15, file, 313, 6, 8575);
+    			attr_dev(div16, "class", "stat-label svelte-94kqpu");
+    			add_location(div16, file, 318, 8, 8772);
+    			attr_dev(div17, "class", "stat-value svelte-94kqpu");
+    			add_location(div17, file, 319, 8, 8821);
+    			attr_dev(div18, "class", "stat-card svelte-94kqpu");
+    			add_location(div18, file, 317, 6, 8740);
+    			attr_dev(div19, "class", "stat-label svelte-94kqpu");
+    			add_location(div19, file, 322, 8, 8943);
+    			attr_dev(div20, "class", "stat-value svelte-94kqpu");
+    			add_location(div20, file, 323, 8, 8990);
+    			attr_dev(div21, "class", "stat-card svelte-94kqpu");
+    			add_location(div21, file, 321, 6, 8911);
+    			attr_dev(div22, "class", "stat-label svelte-94kqpu");
+    			add_location(div22, file, 326, 8, 9105);
+    			attr_dev(div23, "class", "stat-value svelte-94kqpu");
+    			add_location(div23, file, 327, 8, 9151);
+    			attr_dev(div24, "class", "stat-card svelte-94kqpu");
+    			add_location(div24, file, 325, 6, 9073);
+    			attr_dev(div25, "class", "stats-grid svelte-94kqpu");
+    			add_location(div25, file, 304, 4, 8237);
+    			attr_dev(h20, "class", "svelte-94kqpu");
+    			add_location(h20, file, 344, 6, 9840);
+    			attr_dev(div26, "class", "stat-label svelte-94kqpu");
+    			add_location(div26, file, 347, 10, 9938);
+    			attr_dev(div27, "class", "stat-value svelte-94kqpu");
+    			add_location(div27, file, 348, 10, 9985);
+    			attr_dev(div28, "class", "stat-card svelte-94kqpu");
+    			add_location(div28, file, 346, 8, 9904);
+    			attr_dev(div29, "class", "stat-label svelte-94kqpu");
+    			add_location(div29, file, 351, 10, 10105);
+    			attr_dev(div30, "class", "stat-value svelte-94kqpu");
+    			add_location(div30, file, 352, 10, 10154);
+    			attr_dev(div31, "class", "stat-card svelte-94kqpu");
+    			add_location(div31, file, 350, 8, 10071);
+    			attr_dev(div32, "class", "stat-label svelte-94kqpu");
+    			add_location(div32, file, 355, 10, 10275);
+    			attr_dev(div33, "class", "stat-value svelte-94kqpu");
+    			add_location(div33, file, 356, 10, 10324);
+    			attr_dev(div34, "class", "stat-card svelte-94kqpu");
+    			add_location(div34, file, 354, 8, 10241);
+    			attr_dev(div35, "class", "stat-label svelte-94kqpu");
+    			add_location(div35, file, 359, 10, 10445);
+    			attr_dev(div36, "class", "stat-value svelte-94kqpu");
+    			add_location(div36, file, 360, 10, 10495);
+    			attr_dev(div37, "class", "stat-card svelte-94kqpu");
+    			add_location(div37, file, 358, 8, 10411);
+    			attr_dev(div38, "class", "stat-label svelte-94kqpu");
+    			add_location(div38, file, 363, 10, 10619);
+    			attr_dev(div39, "class", "stat-value svelte-94kqpu");
+    			add_location(div39, file, 364, 10, 10669);
+    			attr_dev(div40, "class", "stat-card svelte-94kqpu");
+    			add_location(div40, file, 362, 8, 10585);
+    			attr_dev(div41, "class", "orderbook-stats svelte-94kqpu");
+    			add_location(div41, file, 345, 6, 9866);
+    			attr_dev(h30, "class", "svelte-94kqpu");
+    			add_location(h30, file, 370, 10, 10856);
+    			attr_dev(div42, "class", "orderbook-orders svelte-94kqpu");
+    			add_location(div42, file, 371, 10, 10880);
+    			attr_dev(div43, "class", "orderbook-side svelte-94kqpu");
+    			add_location(div43, file, 369, 8, 10817);
+    			attr_dev(h31, "class", "svelte-94kqpu");
+    			add_location(h31, file, 382, 10, 11295);
+    			attr_dev(div44, "class", "orderbook-orders svelte-94kqpu");
+    			add_location(div44, file, 383, 10, 11319);
+    			attr_dev(div45, "class", "orderbook-side svelte-94kqpu");
+    			add_location(div45, file, 381, 8, 11256);
+    			attr_dev(div46, "class", "orderbook-display svelte-94kqpu");
+    			add_location(div46, file, 368, 6, 10777);
+    			attr_dev(div47, "class", "orderbook-section svelte-94kqpu");
+    			add_location(div47, file, 343, 4, 9802);
+    			attr_dev(h21, "class", "svelte-94kqpu");
+    			add_location(h21, file, 396, 6, 11746);
+    			attr_dev(div48, "class", "trades-list svelte-94kqpu");
+    			add_location(div48, file, 397, 6, 11775);
+    			attr_dev(div49, "class", "trades-section svelte-94kqpu");
+    			add_location(div49, file, 395, 4, 11711);
+    			attr_dev(div50, "class", "volume-fill svelte-94kqpu");
+    			set_style(div50, "width", /*volumeIntensity*/ ctx[11] * 100 + "%");
+    			add_location(div50, file, 411, 8, 12314);
+    			attr_dev(div51, "class", "volume-label svelte-94kqpu");
+    			add_location(div51, file, 412, 8, 12394);
+    			attr_dev(div52, "class", "volume-bar svelte-94kqpu");
+    			add_location(div52, file, 410, 6, 12281);
+    			attr_dev(div53, "class", div53_class_value = "pulse-indicator " + (/*audioEnabled*/ ctx[12] ? 'active' : '') + " svelte-94kqpu");
+    			add_location(div53, file, 414, 6, 12462);
+    			attr_dev(div54, "class", "visualizer svelte-94kqpu");
+    			add_location(div54, file, 409, 4, 12250);
+    			attr_dev(div55, "class", "container svelte-94kqpu");
+    			add_location(div55, file, 261, 2, 6961);
+    			add_location(main, file, 260, 0, 6952);
     		},
     		l: function claim(nodes) {
     			throw new Error("options.hydrate only works if the component was compiled with the `hydratable: true` option");
     		},
     		m: function mount(target, anchor) {
     			insert_dev(target, main, anchor);
-    			append_dev(main, div23);
-    			append_dev(div23, header);
+    			append_dev(main, div55);
+    			append_dev(div55, header);
     			append_dev(header, h1);
     			append_dev(header, t1);
     			append_dev(header, div0);
-    			append_dev(div0, span);
+    			append_dev(div0, span0);
     			append_dev(div0, t2);
+    			append_dev(div0, span1);
+    			if_block0.m(span1, null);
     			append_dev(div0, t3);
-    			append_dev(div23, t4);
-    			append_dev(div23, div1);
+    			if (if_block1) if_block1.m(div0, null);
+    			append_dev(div55, t4);
+    			append_dev(div55, div1);
     			append_dev(div1, button);
     			append_dev(button, t5);
-    			append_dev(div23, t6);
-    			append_dev(div23, div6);
+    			append_dev(div55, t6);
+    			append_dev(div55, div6);
     			append_dev(div6, div5);
     			append_dev(div5, div2);
     			append_dev(div5, t8);
@@ -969,99 +1473,260 @@ var app = (function () {
     			append_dev(div3, t9);
     			append_dev(div5, t10);
     			append_dev(div5, div4);
-    			if_block0.m(div4, null);
-    			append_dev(div23, t11);
-    			append_dev(div23, div16);
-    			append_dev(div16, div9);
+    			if_block2.m(div4, null);
+    			append_dev(div55, t11);
+    			append_dev(div55, div25);
+    			append_dev(div25, div9);
     			append_dev(div9, div7);
     			append_dev(div9, t13);
     			append_dev(div9, div8);
     			append_dev(div8, t14);
-    			append_dev(div16, t15);
-    			append_dev(div16, div12);
+    			append_dev(div25, t15);
+    			append_dev(div25, div12);
     			append_dev(div12, div10);
     			append_dev(div12, t17);
     			append_dev(div12, div11);
     			append_dev(div11, t18);
-    			append_dev(div16, t19);
-    			append_dev(div16, div15);
+    			append_dev(div25, t19);
+    			append_dev(div25, div15);
     			append_dev(div15, div13);
     			append_dev(div15, t21);
     			append_dev(div15, div14);
     			append_dev(div14, t22);
     			append_dev(div14, t23);
-    			append_dev(div16, t24);
-    			if (if_block1) if_block1.m(div16, null);
-    			append_dev(div23, t25);
-    			append_dev(div23, div18);
-    			append_dev(div18, h2);
-    			append_dev(div18, t27);
+    			append_dev(div25, t24);
+    			append_dev(div25, div18);
+    			append_dev(div18, div16);
+    			append_dev(div18, t26);
     			append_dev(div18, div17);
+    			append_dev(div17, t27);
+    			append_dev(div17, t28);
+    			append_dev(div25, t29);
+    			append_dev(div25, div21);
+    			append_dev(div21, div19);
+    			append_dev(div21, t31);
+    			append_dev(div21, div20);
+    			append_dev(div20, t32);
+    			append_dev(div25, t33);
+    			append_dev(div25, div24);
+    			append_dev(div24, div22);
+    			append_dev(div24, t35);
+    			append_dev(div24, div23);
+    			append_dev(div23, t36);
+    			append_dev(div25, t37);
+    			if (if_block3) if_block3.m(div25, null);
+    			append_dev(div55, t38);
+    			append_dev(div55, div47);
+    			append_dev(div47, h20);
+    			append_dev(div47, t40);
+    			append_dev(div47, div41);
+    			append_dev(div41, div28);
+    			append_dev(div28, div26);
+    			append_dev(div28, t42);
+    			append_dev(div28, div27);
+    			append_dev(div27, t43);
+    			append_dev(div41, t44);
+    			append_dev(div41, div31);
+    			append_dev(div31, div29);
+    			append_dev(div31, t46);
+    			append_dev(div31, div30);
+    			append_dev(div30, t47);
+    			append_dev(div41, t48);
+    			append_dev(div41, div34);
+    			append_dev(div34, div32);
+    			append_dev(div34, t50);
+    			append_dev(div34, div33);
+    			append_dev(div33, t51);
+    			append_dev(div41, t52);
+    			append_dev(div41, div37);
+    			append_dev(div37, div35);
+    			append_dev(div37, t54);
+    			append_dev(div37, div36);
+    			append_dev(div36, t55);
+    			append_dev(div36, t56);
+    			append_dev(div41, t57);
+    			append_dev(div41, div40);
+    			append_dev(div40, div38);
+    			append_dev(div40, t59);
+    			append_dev(div40, div39);
+    			append_dev(div39, t60);
+    			append_dev(div39, t61);
+    			append_dev(div47, t62);
+    			append_dev(div47, div46);
+    			append_dev(div46, div43);
+    			append_dev(div43, h30);
+    			append_dev(div43, t64);
+    			append_dev(div43, div42);
 
-    			for (let i = 0; i < each_blocks.length; i += 1) {
-    				if (each_blocks[i]) {
-    					each_blocks[i].m(div17, null);
+    			for (let i = 0; i < each_blocks_2.length; i += 1) {
+    				if (each_blocks_2[i]) {
+    					each_blocks_2[i].m(div42, null);
     				}
     			}
 
-    			append_dev(div23, t28);
-    			append_dev(div23, div22);
-    			append_dev(div22, div20);
-    			append_dev(div20, div19);
-    			append_dev(div22, t29);
-    			append_dev(div22, div21);
+    			append_dev(div46, t65);
+    			append_dev(div46, div45);
+    			append_dev(div45, h31);
+    			append_dev(div45, t67);
+    			append_dev(div45, div44);
+
+    			for (let i = 0; i < each_blocks_1.length; i += 1) {
+    				if (each_blocks_1[i]) {
+    					each_blocks_1[i].m(div44, null);
+    				}
+    			}
+
+    			append_dev(div55, t68);
+    			append_dev(div55, div49);
+    			append_dev(div49, h21);
+    			append_dev(div49, t70);
+    			append_dev(div49, div48);
+
+    			for (let i = 0; i < each_blocks.length; i += 1) {
+    				if (each_blocks[i]) {
+    					each_blocks[i].m(div48, null);
+    				}
+    			}
+
+    			append_dev(div55, t71);
+    			append_dev(div55, div54);
+    			append_dev(div54, div52);
+    			append_dev(div52, div50);
+    			append_dev(div52, t72);
+    			append_dev(div52, div51);
+    			append_dev(div54, t74);
+    			append_dev(div54, div53);
 
     			if (!mounted) {
-    				dispose = listen_dev(button, "click", /*toggleAudio*/ ctx[10], false, false, false, false);
+    				dispose = listen_dev(button, "click", /*toggleAudio*/ ctx[13], false, false, false, false);
     				mounted = true;
     			}
     		},
-    		p: function update(ctx, [dirty]) {
-    			if (dirty & /*isConnected*/ 1 && span_class_value !== (span_class_value = "status-indicator " + (/*isConnected*/ ctx[0] ? 'connected' : 'disconnected') + " svelte-1ubwts6")) {
-    				attr_dev(span, "class", span_class_value);
-    			}
-
-    			if (dirty & /*isConnected*/ 1 && t3_value !== (t3_value = (/*isConnected*/ ctx[0] ? 'Connected' : 'Disconnected') + "")) set_data_dev(t3, t3_value);
-    			if (dirty & /*audioEnabled*/ 512 && t5_value !== (t5_value = (/*audioEnabled*/ ctx[9] ? '🔊 Audio On' : '🔇 Audio Off') + "")) set_data_dev(t5, t5_value);
-
-    			if (dirty & /*audioEnabled*/ 512 && button_class_value !== (button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[9] ? 'enabled' : 'disabled') + " svelte-1ubwts6")) {
-    				attr_dev(button, "class", button_class_value);
-    			}
-
-    			if (dirty & /*currentPrice*/ 2 && t9_value !== (t9_value = formatPrice(/*currentPrice*/ ctx[1]) + "")) set_data_dev(t9, t9_value);
-
-    			if (current_block_type !== (current_block_type = select_block_type(ctx))) {
+    		p: function update(ctx, dirty) {
+    			if (current_block_type === (current_block_type = select_block_type(ctx)) && if_block0) {
+    				if_block0.p(ctx, dirty);
+    			} else {
     				if_block0.d(1);
     				if_block0 = current_block_type(ctx);
 
     				if (if_block0) {
     					if_block0.c();
-    					if_block0.m(div4, null);
+    					if_block0.m(span1, null);
     				}
     			}
 
-    			if (dirty & /*priceDirection*/ 128 && div5_class_value !== (div5_class_value = "current-price " + /*priceDirection*/ ctx[7] + " svelte-1ubwts6")) {
-    				attr_dev(div5, "class", div5_class_value);
-    			}
-
-    			if (dirty & /*tradesPerSecond*/ 32 && t14_value !== (t14_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "")) set_data_dev(t14, t14_value);
-    			if (dirty & /*tradeCount*/ 8) set_data_dev(t18, /*tradeCount*/ ctx[3]);
-    			if (dirty & /*avgTradeSize*/ 16 && t22_value !== (t22_value = formatSize(/*avgTradeSize*/ ctx[4]) + "")) set_data_dev(t22, t22_value);
-
-    			if (/*largestTrade*/ ctx[6]) {
+    			if (/*lastHeartbeat*/ ctx[9]) {
     				if (if_block1) {
     					if_block1.p(ctx, dirty);
     				} else {
-    					if_block1 = create_if_block(ctx);
+    					if_block1 = create_if_block_3(ctx);
     					if_block1.c();
-    					if_block1.m(div16, null);
+    					if_block1.m(div0, null);
     				}
     			} else if (if_block1) {
     				if_block1.d(1);
     				if_block1 = null;
     			}
 
-    			if (dirty & /*trades, formatTime, formatPrice, formatSize*/ 4) {
+    			if (dirty[0] & /*audioEnabled*/ 4096 && t5_value !== (t5_value = (/*audioEnabled*/ ctx[12]
+    			? '🔊 Audio On'
+    			: '🔇 Audio Off') + "")) set_data_dev(t5, t5_value);
+
+    			if (dirty[0] & /*audioEnabled*/ 4096 && button_class_value !== (button_class_value = "audio-toggle " + (/*audioEnabled*/ ctx[12] ? 'enabled' : 'disabled') + " svelte-94kqpu")) {
+    				attr_dev(button, "class", button_class_value);
+    			}
+
+    			if (dirty[0] & /*currentPrice*/ 2 && t9_value !== (t9_value = formatPrice(/*currentPrice*/ ctx[1]) + "")) set_data_dev(t9, t9_value);
+
+    			if (current_block_type_1 !== (current_block_type_1 = select_block_type_1(ctx))) {
+    				if_block2.d(1);
+    				if_block2 = current_block_type_1(ctx);
+
+    				if (if_block2) {
+    					if_block2.c();
+    					if_block2.m(div4, null);
+    				}
+    			}
+
+    			if (dirty[0] & /*priceDirection*/ 1024 && div5_class_value !== (div5_class_value = "current-price " + /*priceDirection*/ ctx[10] + " svelte-94kqpu")) {
+    				attr_dev(div5, "class", div5_class_value);
+    			}
+
+    			if (dirty[0] & /*tradesPerSecond*/ 32 && t14_value !== (t14_value = /*tradesPerSecond*/ ctx[5].toFixed(2) + "")) set_data_dev(t14, t14_value);
+    			if (dirty[0] & /*tradeCount*/ 8) set_data_dev(t18, /*tradeCount*/ ctx[3]);
+    			if (dirty[0] & /*avgTradeSize*/ 16 && t22_value !== (t22_value = formatSize(/*avgTradeSize*/ ctx[4]) + "")) set_data_dev(t22, t22_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t27_value !== (t27_value = formatVolume(/*tickerData*/ ctx[7].volume24h) + "")) set_data_dev(t27, t27_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t32_value !== (t32_value = formatPrice(/*tickerData*/ ctx[7].high24h) + "")) set_data_dev(t32, t32_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t36_value !== (t36_value = formatPrice(/*tickerData*/ ctx[7].low24h) + "")) set_data_dev(t36, t36_value);
+
+    			if (/*largestTrade*/ ctx[6]) {
+    				if (if_block3) {
+    					if_block3.p(ctx, dirty);
+    				} else {
+    					if_block3 = create_if_block(ctx);
+    					if_block3.c();
+    					if_block3.m(div25, null);
+    				}
+    			} else if (if_block3) {
+    				if_block3.d(1);
+    				if_block3 = null;
+    			}
+
+    			if (dirty[0] & /*tickerData*/ 128 && t43_value !== (t43_value = formatPrice(/*tickerData*/ ctx[7].spread) + "")) set_data_dev(t43, t43_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t47_value !== (t47_value = formatPrice(/*tickerData*/ ctx[7].bestBid) + "")) set_data_dev(t47, t47_value);
+    			if (dirty[0] & /*tickerData*/ 128 && t51_value !== (t51_value = formatPrice(/*tickerData*/ ctx[7].bestAsk) + "")) set_data_dev(t51, t51_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t55_value !== (t55_value = formatSize(/*orderBook*/ ctx[8].bidDepth) + "")) set_data_dev(t55, t55_value);
+    			if (dirty[0] & /*orderBook*/ 256 && t60_value !== (t60_value = formatSize(/*orderBook*/ ctx[8].askDepth) + "")) set_data_dev(t60, t60_value);
+
+    			if (dirty[0] & /*orderBook*/ 256) {
+    				each_value_2 = /*orderBook*/ ctx[8].bids;
+    				validate_each_argument(each_value_2);
+    				let i;
+
+    				for (i = 0; i < each_value_2.length; i += 1) {
+    					const child_ctx = get_each_context_2(ctx, each_value_2, i);
+
+    					if (each_blocks_2[i]) {
+    						each_blocks_2[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_2[i] = create_each_block_2(child_ctx);
+    						each_blocks_2[i].c();
+    						each_blocks_2[i].m(div42, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_2.length; i += 1) {
+    					each_blocks_2[i].d(1);
+    				}
+
+    				each_blocks_2.length = each_value_2.length;
+    			}
+
+    			if (dirty[0] & /*orderBook*/ 256) {
+    				each_value_1 = /*orderBook*/ ctx[8].asks;
+    				validate_each_argument(each_value_1);
+    				let i;
+
+    				for (i = 0; i < each_value_1.length; i += 1) {
+    					const child_ctx = get_each_context_1(ctx, each_value_1, i);
+
+    					if (each_blocks_1[i]) {
+    						each_blocks_1[i].p(child_ctx, dirty);
+    					} else {
+    						each_blocks_1[i] = create_each_block_1(child_ctx);
+    						each_blocks_1[i].c();
+    						each_blocks_1[i].m(div44, null);
+    					}
+    				}
+
+    				for (; i < each_blocks_1.length; i += 1) {
+    					each_blocks_1[i].d(1);
+    				}
+
+    				each_blocks_1.length = each_value_1.length;
+    			}
+
+    			if (dirty[0] & /*trades*/ 4) {
     				each_value = /*trades*/ ctx[2].slice(0, 10);
     				validate_each_argument(each_value);
     				let i;
@@ -1074,7 +1739,7 @@ var app = (function () {
     					} else {
     						each_blocks[i] = create_each_block(child_ctx);
     						each_blocks[i].c();
-    						each_blocks[i].m(div17, null);
+    						each_blocks[i].m(div48, null);
     					}
     				}
 
@@ -1085,12 +1750,12 @@ var app = (function () {
     				each_blocks.length = each_value.length;
     			}
 
-    			if (dirty & /*volumeIntensity*/ 256) {
-    				set_style(div19, "width", /*volumeIntensity*/ ctx[8] * 100 + "%");
+    			if (dirty[0] & /*volumeIntensity*/ 2048) {
+    				set_style(div50, "width", /*volumeIntensity*/ ctx[11] * 100 + "%");
     			}
 
-    			if (dirty & /*audioEnabled*/ 512 && div21_class_value !== (div21_class_value = "pulse-indicator " + (/*audioEnabled*/ ctx[9] ? 'active' : '') + " svelte-1ubwts6")) {
-    				attr_dev(div21, "class", div21_class_value);
+    			if (dirty[0] & /*audioEnabled*/ 4096 && div53_class_value !== (div53_class_value = "pulse-indicator " + (/*audioEnabled*/ ctx[12] ? 'active' : '') + " svelte-94kqpu")) {
+    				attr_dev(div53, "class", div53_class_value);
     			}
     		},
     		i: noop,
@@ -1099,6 +1764,10 @@ var app = (function () {
     			if (detaching) detach_dev(main);
     			if_block0.d();
     			if (if_block1) if_block1.d();
+    			if_block2.d();
+    			if (if_block3) if_block3.d();
+    			destroy_each(each_blocks_2, detaching);
+    			destroy_each(each_blocks_1, detaching);
     			destroy_each(each_blocks, detaching);
     			mounted = false;
     			dispose();
@@ -1118,6 +1787,10 @@ var app = (function () {
 
     const TPS_WINDOW = 10; // seconds
 
+    function processStatus(status) {
+    	console.log('Status update:', status);
+    }
+
     function formatPrice(price) {
     	return new Intl.NumberFormat('en-US',
     	{
@@ -1132,6 +1805,16 @@ var app = (function () {
     	return size.toFixed(6);
     }
 
+    function formatVolume(volume) {
+    	if (volume >= 1000000) {
+    		return (volume / 1000000).toFixed(2) + 'M';
+    	} else if (volume >= 1000) {
+    		return (volume / 1000).toFixed(2) + 'K';
+    	}
+
+    	return volume.toFixed(2);
+    }
+
     function formatTime(timestamp) {
     	return new Date(timestamp).toLocaleTimeString();
     }
@@ -1141,15 +1824,6 @@ var app = (function () {
     	validate_slots('App', slots, []);
     	let ws;
     	let isConnected = false;
-
-    	// Audio context and nodes
-    	let audioContext;
-
-    	let oscillator;
-    	let gainNode;
-    	let analyser;
-    	let dataArray;
-    	let isAudioInitialized = false;
 
     	// Trade data
     	let currentPrice = 0;
@@ -1162,11 +1836,36 @@ var app = (function () {
     	let tradesPerSecond = 0;
     	let largestTrade = null;
 
+    	// New ticker data
+    	let tickerData = {
+    		bestBid: 0,
+    		bestAsk: 0,
+    		volume24h: 0,
+    		low24h: 0,
+    		high24h: 0,
+    		spread: 0
+    	};
+
+    	// Order book data
+    	let orderBook = {
+    		bids: [],
+    		asks: [],
+    		spread: 0,
+    		bidDepth: 0,
+    		askDepth: 0
+    	};
+
+    	// Connection health
+    	let lastHeartbeat = null;
+
+    	let connectionHealth = 'unknown';
+
     	// UI state
     	let priceDirection = 'neutral'; // 'up', 'down', 'neutral'
 
     	let volumeIntensity = 0;
     	let audioEnabled = false;
+    	let activeChannels = ['matches', 'ticker', 'level2', 'heartbeat'];
 
     	// Rolling window for TPS calculation
     	let tradeTimestamps = [];
@@ -1180,38 +1879,63 @@ var app = (function () {
     		clickSound = new Audio('/geiger_click.wav');
 
     		clickSound.load();
-    		initializeAudio();
     	});
 
     	onDestroy(() => {
     		if (ws) {
     			ws.close();
     		}
-
-    		if (audioContext) {
-    			audioContext.close();
-    		}
     	});
 
     	function connectWebSocket() {
     		try {
-    			ws = new WebSocket('ws://localhost:8000/ws');
+    			// Connect with channel filtering for multi-channel support
+    			const channelParam = activeChannels.join(',');
+
+    			ws = new WebSocket(`ws://localhost:8000/ws?channels=${channelParam}`);
 
     			ws.onopen = () => {
     				$$invalidate(0, isConnected = true);
-    				console.log('Connected to WebSocket');
+    				connectionHealth = 'healthy';
+    				console.log('Connected to WebSocket with channels:', activeChannels);
     			};
 
     			ws.onmessage = event => {
     				const message = JSON.parse(event.data);
 
-    				if (message.type === 'trade') {
-    					processTrade(message.data);
+    				// Only process BTC data
+    				if (message.product_id && message.product_id !== 'BTC-USD') {
+    					return;
+    				}
+
+    				switch (message.type) {
+    					case 'btc_trade':
+    						processTrade(message.data);
+    						break;
+    					case 'btc_ticker':
+    						processTicker(message.data);
+    						break;
+    					case 'btc_orderbook_snapshot':
+    						processOrderBookSnapshot(message.data);
+    						break;
+    					case 'btc_orderbook_update':
+    						processOrderBookUpdate(message.data);
+    						break;
+    					case 'btc_heartbeat':
+    						processHeartbeat(message.data);
+    						break;
+    					case 'btc_status':
+    						processStatus(message.data);
+    						break;
+    					case 'filter_channels':
+    						console.log('Channel filter applied:', message.channels);
+    						break;
     				}
     			};
 
     			ws.onclose = () => {
     				$$invalidate(0, isConnected = false);
+    				connectionHealth = 'disconnected';
     				console.log('WebSocket connection closed');
 
     				// Reconnect after 3 seconds
@@ -1220,43 +1944,11 @@ var app = (function () {
 
     			ws.onerror = error => {
     				console.error('WebSocket error:', error);
+    				connectionHealth = 'error';
     			};
     		} catch(error) {
     			console.error('Failed to connect to WebSocket:', error);
-    		}
-    	}
-
-    	function initializeAudio() {
-    		try {
-    			audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-    			// Create oscillator
-    			oscillator = audioContext.createOscillator();
-
-    			gainNode = audioContext.createGain();
-    			analyser = audioContext.createAnalyser();
-
-    			// Configure nodes
-    			oscillator.type = 'sine';
-
-    			oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
-    			gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    			analyser.fftSize = 256;
-    			dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-    			// Connect nodes
-    			oscillator.connect(gainNode);
-
-    			gainNode.connect(analyser);
-    			analyser.connect(audioContext.destination);
-
-    			// Start oscillator
-    			oscillator.start();
-
-    			isAudioInitialized = true;
-    			console.log('Audio initialized');
-    		} catch(error) {
-    			console.error('Failed to initialize audio:', error);
+    			connectionHealth = 'error';
     		}
     	}
 
@@ -1270,15 +1962,15 @@ var app = (function () {
 
     		// Determine price direction
     		if (currentPrice > lastPrice) {
-    			$$invalidate(7, priceDirection = 'up');
+    			$$invalidate(10, priceDirection = 'up');
     		} else if (currentPrice < lastPrice) {
-    			$$invalidate(7, priceDirection = 'down');
+    			$$invalidate(10, priceDirection = 'down');
     		} else {
-    			$$invalidate(7, priceDirection = 'neutral');
+    			$$invalidate(10, priceDirection = 'neutral');
     		}
 
     		// Add to trades array (keep last 100 trades)
-    		$$invalidate(2, trades = [trade, ...trades.slice(0, 99)]); // Svelte reactivity fix
+    		$$invalidate(2, trades = [trade, ...trades.slice(0, 99)]);
 
     		// Update statistics
     		$$invalidate(3, tradeCount++, tradeCount);
@@ -1293,12 +1985,7 @@ var app = (function () {
     		$$invalidate(5, tradesPerSecond = tradeTimestamps.length / TPS_WINDOW);
 
     		// Update volume intensity (0-1 scale)
-    		$$invalidate(8, volumeIntensity = Math.min(trade.size / 10, 1)); // Normalize to 10 BTC max
-
-    		// Update audio
-    		if (audioEnabled && isAudioInitialized) {
-    			updateAudio(trade);
-    		}
+    		$$invalidate(11, volumeIntensity = Math.min(trade.size / 10, 1)); // Normalize to 10 BTC max
 
     		// Play the click sound if audio is enabled
     		if (audioEnabled && clickSound) {
@@ -1309,40 +1996,67 @@ var app = (function () {
     		// Track largest trade
     		if (!largestTrade || trade.size > largestTrade.size) {
     			$$invalidate(6, largestTrade = { ...trade });
-    			$$invalidate(6, largestTrade = { ...largestTrade }); // Svelte reactivity fix
     		}
     	}
 
-    	function updateAudio(trade) {
-    		if (!audioContext || !oscillator || !gainNode) return;
-    		const now = audioContext.currentTime;
+    	function processTicker(ticker) {
+    		$$invalidate(7, tickerData = {
+    			bestBid: ticker.best_bid,
+    			bestAsk: ticker.best_ask,
+    			volume24h: ticker.volume_24h,
+    			low24h: ticker.low_24h,
+    			high24h: ticker.high_24h,
+    			spread: ticker.best_ask - ticker.best_bid
+    		});
 
-    		// Map trade size to frequency (larger trades = lower frequency)
-    		const frequency = Math.max(100, 500 - trade.size * 20);
+    		// Update current price from ticker if no recent trades
+    		if (!currentPrice || Math.abs(currentPrice - ticker.price) > 0.01) {
+    			$$invalidate(1, currentPrice = ticker.price);
+    		}
+    	}
 
-    		// Map volume intensity to gain (0-0.3 to avoid ear damage)
-    		const gain = volumeIntensity * 0.3;
+    	function processOrderBookSnapshot(snapshot) {
+    		$$invalidate(8, orderBook.bids = snapshot.bids.slice(0, 10), orderBook);
+    		$$invalidate(8, orderBook.asks = snapshot.asks.slice(0, 10), orderBook);
+    		updateOrderBookStats();
+    	}
 
-    		// Different tones for buy/sell
-    		const baseFreq = trade.side === 'buy' ? frequency : frequency * 0.8;
+    	function processOrderBookUpdate(update) {
+    		// This is a simplified update - in production you'd want to maintain the full order book
+    		// For now, we'll just track the stats from the backend
+    		updateOrderBookStats();
+    	}
 
-    		// Set frequency and gain
-    		oscillator.frequency.setValueAtTime(baseFreq, now);
+    	function updateOrderBookStats() {
+    		if (orderBook.bids.length > 0 && orderBook.asks.length > 0) {
+    			const topBid = parseFloat(orderBook.bids[0][0]);
+    			const topAsk = parseFloat(orderBook.asks[0][0]);
+    			$$invalidate(8, orderBook.spread = topAsk - topBid, orderBook);
 
-    		gainNode.gain.setValueAtTime(gain, now);
+    			// Calculate depth (total volume in top 10 levels)
+    			$$invalidate(8, orderBook.bidDepth = orderBook.bids.reduce((sum, [price, size]) => sum + parseFloat(size), 0), orderBook);
 
-    		// Create a brief tone (attack and decay)
-    		gainNode.gain.exponentialRampToValueAtTime(gain, now + 0.01);
+    			$$invalidate(8, orderBook.askDepth = orderBook.asks.reduce((sum, [price, size]) => sum + parseFloat(size), 0), orderBook);
+    		}
+    	}
 
-    		gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    	function processHeartbeat(heartbeat) {
+    		$$invalidate(9, lastHeartbeat = new Date(heartbeat.timestamp));
+    		connectionHealth = 'healthy';
     	}
 
     	function toggleAudio() {
-    		$$invalidate(9, audioEnabled = !audioEnabled);
+    		$$invalidate(12, audioEnabled = !audioEnabled);
+    	}
 
-    		if (!audioEnabled && gainNode) {
-    			gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+    	function getConnectionStatus() {
+    		if (!isConnected) return 'disconnected';
+
+    		if (lastHeartbeat && Date.now() - lastHeartbeat.getTime() > 30000) {
+    			return 'stale';
     		}
+
+    		return connectionHealth;
     	}
 
     	const writable_props = [];
@@ -1356,12 +2070,6 @@ var app = (function () {
     		onDestroy,
     		ws,
     		isConnected,
-    		audioContext,
-    		oscillator,
-    		gainNode,
-    		analyser,
-    		dataArray,
-    		isAudioInitialized,
     		currentPrice,
     		lastPrice,
     		trades,
@@ -1370,31 +2078,36 @@ var app = (function () {
     		avgTradeSize,
     		tradesPerSecond,
     		largestTrade,
+    		tickerData,
+    		orderBook,
+    		lastHeartbeat,
+    		connectionHealth,
     		priceDirection,
     		volumeIntensity,
     		audioEnabled,
+    		activeChannels,
     		tradeTimestamps,
     		TPS_WINDOW,
     		clickSound,
     		connectWebSocket,
-    		initializeAudio,
     		processTrade,
-    		updateAudio,
+    		processTicker,
+    		processOrderBookSnapshot,
+    		processOrderBookUpdate,
+    		updateOrderBookStats,
+    		processHeartbeat,
+    		processStatus,
     		toggleAudio,
     		formatPrice,
     		formatSize,
-    		formatTime
+    		formatVolume,
+    		formatTime,
+    		getConnectionStatus
     	});
 
     	$$self.$inject_state = $$props => {
     		if ('ws' in $$props) ws = $$props.ws;
     		if ('isConnected' in $$props) $$invalidate(0, isConnected = $$props.isConnected);
-    		if ('audioContext' in $$props) audioContext = $$props.audioContext;
-    		if ('oscillator' in $$props) oscillator = $$props.oscillator;
-    		if ('gainNode' in $$props) gainNode = $$props.gainNode;
-    		if ('analyser' in $$props) analyser = $$props.analyser;
-    		if ('dataArray' in $$props) dataArray = $$props.dataArray;
-    		if ('isAudioInitialized' in $$props) isAudioInitialized = $$props.isAudioInitialized;
     		if ('currentPrice' in $$props) $$invalidate(1, currentPrice = $$props.currentPrice);
     		if ('lastPrice' in $$props) lastPrice = $$props.lastPrice;
     		if ('trades' in $$props) $$invalidate(2, trades = $$props.trades);
@@ -1403,9 +2116,14 @@ var app = (function () {
     		if ('avgTradeSize' in $$props) $$invalidate(4, avgTradeSize = $$props.avgTradeSize);
     		if ('tradesPerSecond' in $$props) $$invalidate(5, tradesPerSecond = $$props.tradesPerSecond);
     		if ('largestTrade' in $$props) $$invalidate(6, largestTrade = $$props.largestTrade);
-    		if ('priceDirection' in $$props) $$invalidate(7, priceDirection = $$props.priceDirection);
-    		if ('volumeIntensity' in $$props) $$invalidate(8, volumeIntensity = $$props.volumeIntensity);
-    		if ('audioEnabled' in $$props) $$invalidate(9, audioEnabled = $$props.audioEnabled);
+    		if ('tickerData' in $$props) $$invalidate(7, tickerData = $$props.tickerData);
+    		if ('orderBook' in $$props) $$invalidate(8, orderBook = $$props.orderBook);
+    		if ('lastHeartbeat' in $$props) $$invalidate(9, lastHeartbeat = $$props.lastHeartbeat);
+    		if ('connectionHealth' in $$props) connectionHealth = $$props.connectionHealth;
+    		if ('priceDirection' in $$props) $$invalidate(10, priceDirection = $$props.priceDirection);
+    		if ('volumeIntensity' in $$props) $$invalidate(11, volumeIntensity = $$props.volumeIntensity);
+    		if ('audioEnabled' in $$props) $$invalidate(12, audioEnabled = $$props.audioEnabled);
+    		if ('activeChannels' in $$props) activeChannels = $$props.activeChannels;
     		if ('tradeTimestamps' in $$props) tradeTimestamps = $$props.tradeTimestamps;
     		if ('clickSound' in $$props) clickSound = $$props.clickSound;
     	};
@@ -1422,17 +2140,21 @@ var app = (function () {
     		avgTradeSize,
     		tradesPerSecond,
     		largestTrade,
+    		tickerData,
+    		orderBook,
+    		lastHeartbeat,
     		priceDirection,
     		volumeIntensity,
     		audioEnabled,
-    		toggleAudio
+    		toggleAudio,
+    		getConnectionStatus
     	];
     }
 
     class App extends SvelteComponentDev {
     	constructor(options) {
     		super(options);
-    		init(this, options, instance, create_fragment, safe_not_equal, {});
+    		init(this, options, instance, create_fragment, safe_not_equal, {}, null, [-1, -1]);
 
     		dispatch_dev("SvelteRegisterComponent", {
     			component: this,
