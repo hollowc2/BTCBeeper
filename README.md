@@ -239,3 +239,5 @@ This project is licensed under the MIT License.
 Disclaimer
 This application is for educational and entertainment purposes only. It is not intended for trading or financial advice. Use at your own risk.
 
+![BTCBeeper](data/images/BTCBeeper.jpg)
+
