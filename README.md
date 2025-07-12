@@ -1,6 +1,6 @@
 # 🎵 BTCBeeper: Live BTC Audio & Visual Tape
 
-BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator. It streams live trades from Coinbase, displays rich statistics, and generates Geiger-counter-style audio feedback based on trading activity. Choose from a modern web UI, a terminal-based CLI, or imagine a physical device for the ultimate retro experience.
+BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator. It streams live trades from Coinbase, displays rich statistics, and generates Geiger-counter-style audio feedback based on trading activity. Choose from a modern web UI, or a terminal-based CLI.
 
 ---
 
@@ -29,8 +29,7 @@ BTCBeeper brings the excitement of the trading floor to your screen and speakers
 - **Multiple UI options:**
   - Modern web dashboard (Svelte, Web Audio API)
   - Terminal-based CLI (Rich, Pygame)
-  - (Concept) Physical hardware display
-- **Dynamic audio feedback** (Geiger counter clicks, mapped to trade size/type)
+- **Audio feedback** (Geiger counter clicks)
 - **Live price, trade stats, and order book**
 - **Customizable audio** (multiple click sounds)
 - **Responsive, modern design**
@@ -58,12 +57,7 @@ A modern, interactive dashboard in your browser. Visualize trades, stats, and or
 - Audio on/off toggle
 - Volume intensity and trade direction visualization
 
-### 3. Hardware Device (Concept)
-Imagine BTCBeeper as a physical Geiger counter for Bitcoin! (Concept art below)
 
-![Hardware Mockup](data/images/BTCBeeper.jpg)
-
----
 
 ## Architecture
 - **Backend:** Python FastAPI, WebSocket, connects to Coinbase, streams BTC trades
