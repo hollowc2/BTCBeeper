@@ -209,7 +209,6 @@ class BTCBeeperApp(App):
         lines = [
             f"Total Trades: {stats['total_trades']}",
             f"Volume Today: {stats['volume_today']:.6f} BTC",
-            f"24h Change: {stats['price_change_24h']:.2f}%",
             f"Trades/sec (TPS): {stats['tps']:.2f}",
             f"Highest TPS: {stats['highest_tps']:.2f}",
             f"Avg Trade Size: {stats['avg_trade_size']:.6f} BTC",
