@@ -1,7 +1,7 @@
 # 🎵 BTCBeeper: Live BTC Audio & Visual Tape
 
 <div align="center">
-  <img src="data/images/icon.png" alt="BTCBeeper Icon" width="200"/>
+  <img src="data/images/icon.png" alt="BTCBeeper Icon" width="500"/>
 </div>
 
 BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator. It streams live trades directly from Coinbase, displays rich statistics in a terminal-based interface, and generates Geiger-counter-style audio feedback based on trading activity.
