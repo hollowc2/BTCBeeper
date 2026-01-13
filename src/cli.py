@@ -311,7 +311,7 @@ class BTCBeeperApp(App):
             f"Trades/sec (TPS): {stats['tps']:.2f}",
             f"Highest TPS: {stats['highest_tps']:.2f}",
             f"Avg Trade Size: {stats['avg_trade_size']:.6f} BTC",
-            f"Min Trade Size: {min_trade_size} BTC (press [ or ] to adjust)",
+            f"Min Trade Size: {min_trade_size} BTC (press '[' or ']' to adjust)",
         ]
         if stats['largest_trade']:
             lt = stats['largest_trade']
