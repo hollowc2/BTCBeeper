@@ -6,15 +6,24 @@ import pygame
 import time
 from textual.app import App, ComposeResult
 from textual.widgets import Static, DataTable
-from textual.reactive import reactive
-from textual import events
 from textual.timer import Timer
 
 # Path to your click sound
 CLICK_SOUND_PATH = "data/sounds/geiger_click7.wav"
 
-# WebSocket server URL
-WS_URL = "ws://localhost:8000/ws"
+# Coinbase WebSocket URL
+COINBASE_WS_URL = "wss://ws-feed.exchange.coinbase.com"
+
+# Constants
+TPS_WINDOW = 10  # seconds - window for TPS calculation
+MAX_RECENT_TRADES = 1000  # Maximum number of recent trades to keep in memory
+MAX_RECONNECT_ATTEMPTS = 5  # Maximum WebSocket reconnection attempts
+RECONNECT_DELAY = 5  # seconds - delay between reconnection attempts
+BOT_DETECTION_THRESHOLD = 5  # Number of identical trades to trigger bot detection
+BOT_BANNER_DURATION = 5  # seconds - how long to show bot banner
+TRADES_TABLE_SIZE = 10  # Number of trades to display in table
+STATS_REFRESH_INTERVAL = 0.5  # seconds - how often to refresh stats display
+ANIMATION_DURATION = 0.5  # seconds - price animation duration
 
 # Store latest stats
 stats = {
@@ -28,34 +37,44 @@ stats = {
     "highest_tps": 0.0,
 }
 
-recent_trades = []  # Keep last N trades
-trade_timestamps = []  # For TPS calculation
-TPS_WINDOW = 10  # seconds
-
+recent_trades: list[dict] = []  # Keep last N trades (limited to MAX_RECENT_TRADES)
+trade_timestamps: list[float] = []  # For TPS calculation
 audio_enabled = True
 click_sound = None
 
 class PriceWidget(Static):
+    """Widget for displaying BTC/USD price with animation effects."""
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.last_price = None
+        self.last_price: float | None = None
         self.anim_timer: Timer | None = None
 
-    def update_price(self, price: float):
+    def update_price(self, price: float) -> None:
+        """Update the displayed price.
+        
+        Args:
+            price: Current BTC/USD price to display
+        """
         # Format price large and centered (markup only uses supported tags)
         self.update(f"\n[bold bright_white on black]BTC/USD[/]\n\n[bold bright_yellow on black]${price:,.2f}[/]")
 
-    def animate(self, direction: str):
-        # direction: 'up' or 'down'
+    def animate(self, direction: str) -> None:
+        """Animate price change with color transition.
+        
+        Args:
+            direction: 'up' for price increase (green), 'down' for decrease (red)
+        """
         if direction == 'up':
             self.add_class('price-up')
         elif direction == 'down':
             self.add_class('price-down')
         if self.anim_timer:
             self.anim_timer.stop()
-        self.anim_timer = self.set_timer(0.5, self.reset_animation)
+        self.anim_timer = self.set_timer(ANIMATION_DURATION, self.reset_animation)
 
-    def reset_animation(self):
+    def reset_animation(self) -> None:
+        """Reset price animation classes."""
         self.remove_class('price-up')
         self.remove_class('price-down')
 
@@ -128,80 +147,160 @@ class BTCBeeperApp(App):
         yield self.bot_banner
 
     async def on_mount(self) -> None:
-        self.set_interval(0.5, self.refresh_stats)
+        """Initialize the application on mount."""
+        self.set_interval(STATS_REFRESH_INTERVAL, self.refresh_stats)
         await self.connect_ws()
-        self.last_price = None
+        self.last_price: float | None = None
 
-    async def connect_ws(self):
-        async def ws_loop():
+    async def connect_ws(self) -> None:
+        async def ws_loop() -> None:
+            """Main WebSocket connection loop with reconnection logic."""
             global stats, recent_trades
-            try:
-                async with websockets.connect(WS_URL) as websocket:
-                    while True:
-                        message = await websocket.recv()
-                        data = json.loads(message)
-                        msg_type = data.get("type")
-                        payload = data.get("data", {})
-                        if msg_type == "btc_trade":
-                            min_trade_size = self.get_min_trade_size()
-                            if payload["size"] < min_trade_size:
-                                continue  # Ignore trades below filter for all stats/audio
-                            stats["total_trades"] += 1
-                            prev_price = stats["last_price"]
-                            stats["last_price"] = payload["price"]
-                            stats["volume_today"] += payload["size"]
-                            recent_trades.append(payload)
-                            trade_timestamps.append(time.time())
-                            self.update_tps()
-                            stats["avg_trade_size"] = stats["volume_today"] / stats["total_trades"] if stats["total_trades"] else 0.0
-                            if not stats["largest_trade"] or payload["size"] > stats["largest_trade"]["size"]:
-                                stats["largest_trade"] = payload.copy()
-                            await self.play_click()
-                            # Animate price if changed
-                            if prev_price is not None:
-                                if stats["last_price"] > prev_price:
-                                    self.price_widget.animate('up')
-                                elif stats["last_price"] < prev_price:
-                                    self.price_widget.animate('down')
-                        elif msg_type == "btc_ticker":
-                            stats["last_price"] = payload["price"]
-                            stats["price_change_24h"] = payload.get("price_change_24h", stats["price_change_24h"])
-                        self.refresh_stats()
-            except Exception as e:
-                self.stats_widget.update(f"[Connection Error]: {e}")
+            reconnect_attempts = 0
+            
+            while reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
+                try:
+                    # Subscribe to BTC-USD channels
+                    subscribe_message = {
+                        "type": "subscribe",
+                        "product_ids": ["BTC-USD"],
+                        "channels": ["matches", "ticker", "heartbeat"]
+                    }
+                    
+                    async with websockets.connect(COINBASE_WS_URL) as websocket:
+                        await websocket.send(json.dumps(subscribe_message))
+                        reconnect_attempts = 0  # Reset on successful connection
+                        
+                        async for message in websocket:
+                            try:
+                                data = json.loads(message)
+                                msg_type = data.get("type", "")
+                                
+                                # Only process BTC-USD messages
+                                if data.get("product_id") not in ["BTC-USD", None]:
+                                    continue
+                                
+                                if msg_type in ["match", "last_match"]:
+                                    # Process trade data
+                                    min_trade_size = self.get_min_trade_size()
+                                    trade_size = float(data.get("size", 0))
+                                    
+                                    if trade_size < min_trade_size:
+                                        continue  # Ignore trades below filter
+                                    
+                                    trade_data = {
+                                        "price": float(data["price"]),
+                                        "size": trade_size,
+                                        "side": data.get("side", "unknown"),
+                                        "timestamp": data.get("time", ""),
+                                        "trade_id": str(data.get("trade_id", ""))
+                                    }
+                                    
+                                    stats["total_trades"] += 1
+                                    prev_price = stats["last_price"]
+                                    stats["last_price"] = trade_data["price"]
+                                    stats["volume_today"] += trade_data["size"]
+                                    
+                                    # Limit recent_trades size to prevent unbounded growth
+                                    recent_trades.append(trade_data)
+                                    if len(recent_trades) > MAX_RECENT_TRADES:
+                                        recent_trades.pop(0)
+                                    
+                                    trade_timestamps.append(time.time())
+                                    self.update_tps()
+                                    stats["avg_trade_size"] = stats["volume_today"] / stats["total_trades"] if stats["total_trades"] else 0.0
+                                    
+                                    if not stats["largest_trade"] or trade_data["size"] > stats["largest_trade"]["size"]:
+                                        stats["largest_trade"] = trade_data.copy()
+                                    
+                                    await self.play_click()
+                                    
+                                    # Animate price if changed
+                                    if prev_price is not None:
+                                        if stats["last_price"] > prev_price:
+                                            self.price_widget.animate('up')
+                                        elif stats["last_price"] < prev_price:
+                                            self.price_widget.animate('down')
+                                    
+                                    self.refresh_stats()
+                                    
+                                elif msg_type == "ticker":
+                                    # Process ticker data
+                                    ticker_price = float(data.get("price", 0))
+                                    if ticker_price > 0:
+                                        stats["last_price"] = ticker_price
+                                        
+                                        # Calculate 24h price change if we have low_24h
+                                        low_24h = data.get("low_24h")
+                                        if low_24h and float(low_24h) > 0:
+                                            stats["price_change_24h"] = ((ticker_price - float(low_24h)) / float(low_24h)) * 100
+                                        
+                                        self.refresh_stats()
+                                
+                                elif msg_type == "error":
+                                    # Log errors but continue
+                                    error_msg = data.get("message", "Unknown error")
+                                    self.stats_widget.update(f"[Error]: {error_msg}")
+                                
+                            except json.JSONDecodeError:
+                                continue  # Skip invalid JSON
+                            except (KeyError, ValueError, TypeError) as e:
+                                # Log processing errors but continue
+                                continue
+                                
+                except (websockets.exceptions.WebSocketException, ConnectionError, OSError) as e:
+                    reconnect_attempts += 1
+                    error_msg = f"[Connection Error]: {e}. Reconnecting... ({reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS})"
+                    self.stats_widget.update(error_msg)
+                    if reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
+                        await asyncio.sleep(RECONNECT_DELAY)
+                    else:
+                        self.stats_widget.update("[Connection Failed]: Max reconnection attempts reached. Please restart the application.")
         self.run_worker(ws_loop, exclusive=True)
 
-    def update_tps(self):
+    def update_tps(self) -> None:
+        """Update trades per second (TPS) calculation using rolling window."""
         now = time.time()
+        # Remove timestamps outside the window
         while trade_timestamps and now - trade_timestamps[0] > TPS_WINDOW:
             trade_timestamps.pop(0)
         stats['tps'] = len(trade_timestamps) / TPS_WINDOW
         if stats['tps'] > stats['highest_tps']:
             stats['highest_tps'] = stats['tps']
 
-    async def play_click(self):
+    async def play_click(self) -> None:
+        """Play click sound if audio is enabled."""
         if audio_enabled and click_sound:
             click_sound.play()
 
-    def action_toggle_audio(self):
+    def action_toggle_audio(self) -> None:
+        """Toggle audio on/off."""
         global audio_enabled
         audio_enabled = not audio_enabled
         self.refresh_stats()
 
-    def action_filter_down(self):
+    def action_filter_down(self) -> None:
+        """Decrease minimum trade size filter."""
         if self.filter_index > 0:
             self.filter_index -= 1
             self.refresh_stats()
 
-    def action_filter_up(self):
+    def action_filter_up(self) -> None:
+        """Increase minimum trade size filter."""
         if self.filter_index < len(self.FILTER_SIZES) - 1:
             self.filter_index += 1
             self.refresh_stats()
 
-    def get_min_trade_size(self):
+    def get_min_trade_size(self) -> float:
+        """Get the current minimum trade size filter.
+        
+        Returns:
+            Minimum trade size in BTC
+        """
         return self.FILTER_SIZES[self.filter_index]
 
-    def refresh_stats(self):
+    def refresh_stats(self) -> None:
+        """Refresh all displayed statistics and update UI widgets."""
         min_trade_size = self.get_min_trade_size()
         # Update price widget
         self.price_widget.update_price(stats['last_price'])
@@ -223,27 +322,27 @@ class BTCBeeperApp(App):
         filtered_trades = [t for t in recent_trades[-100:] if t['size'] >= min_trade_size]
         # Update trades table
         self.trades_table.clear()
-        for trade in reversed(filtered_trades[-10:]):
+        for trade in reversed(filtered_trades[-TRADES_TABLE_SIZE:]):
             self.trades_table.add_row(trade['side'].capitalize(), f"${trade['price']:.2f}", f"{trade['size']:.6f}")
-        # Bot detection: 5+ trades of nearly identical size in last 10 filtered trades
-        size_counts = {}
-        size_to_prices = {}
-        for trade in filtered_trades[-10:]:
+        # Bot detection: detect patterns of identical trade sizes
+        size_counts: dict[float, int] = {}
+        size_to_prices: dict[float, list[float]] = {}
+        for trade in filtered_trades[-TRADES_TABLE_SIZE:]:
             rounded_size = round(trade['size'], 4)
             size_counts[rounded_size] = size_counts.get(rounded_size, 0) + 1
             if rounded_size not in size_to_prices:
                 size_to_prices[rounded_size] = []
             size_to_prices[rounded_size].append(trade['price'])
-        likely_bot = any(count >= 5 for count in size_counts.values())
+        likely_bot = any(count >= BOT_DETECTION_THRESHOLD for count in size_counts.values())
         if likely_bot:
-            repeated_size = max(size_counts, key=lambda k: size_counts[k] if size_counts[k] >= 5 else 0)
+            repeated_size = max(size_counts, key=lambda k: size_counts[k] if size_counts[k] >= BOT_DETECTION_THRESHOLD else 0)
             price_list = size_to_prices[repeated_size]
             repeated_price = price_list[-1] if price_list else stats['last_price']
-            self.bot_banner.update(f"[bold]⚠️  Possible bot activity: 5+ trades of {repeated_size} BTC @ ${repeated_price:,.2f} in last 10! ⚠️[/bold]")
+            self.bot_banner.update(f"[bold]⚠️  Possible bot activity: {BOT_DETECTION_THRESHOLD}+ trades of {repeated_size} BTC @ ${repeated_price:,.2f} in last {TRADES_TABLE_SIZE}! ⚠️[/bold]")
             self.bot_banner.add_class("active")
             if hasattr(self, 'bot_banner_timer') and self.bot_banner_timer:
                 self.bot_banner_timer.stop()
-            self.bot_banner_timer = self.set_timer(5, self.hide_bot_banner)
+            self.bot_banner_timer = self.set_timer(BOT_BANNER_DURATION, self.hide_bot_banner)
         else:
             self.bot_banner.update("")
             self.bot_banner.remove_class("active")
@@ -251,7 +350,8 @@ class BTCBeeperApp(App):
                 self.bot_banner_timer.stop()
                 self.bot_banner_timer = None
 
-    def hide_bot_banner(self):
+    def hide_bot_banner(self) -> None:
+        """Hide the bot detection banner."""
         self.bot_banner.update("")
         self.bot_banner.remove_class("active")
 

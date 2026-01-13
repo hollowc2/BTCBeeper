@@ -1,12 +1,32 @@
+"""
+Click sound generator for BTCBeeper.
+
+Generates Geiger counter-style click sounds with various characteristics
+(frequency, duration, noise level, decay rate) for audio feedback.
+"""
+
 import numpy as np
 from scipy.io import wavfile
 import os
+from typing import TypedDict
 
 # Parameters for the Geiger counter click
-sample_rate = 44100  # Hz (standard audio sample rate)
+SAMPLE_RATE = 44100  # Hz (standard audio sample rate)
+RANDOM_SEED = 42  # For reproducible sound generation
+
+
+class ClickParams(TypedDict):
+    """Parameters for generating a click sound."""
+    filename: str
+    duration: float
+    frequency: float
+    sine_amp: float
+    noise_amp: float
+    decay: float
+    double: bool
 
 # List of click variations
-click_variations = [
+click_variations: list[ClickParams] = [
     {
         "filename": "geiger_click1.wav",
         "duration": 0.002,  # shorter, softer
@@ -100,25 +120,67 @@ click_variations = [
     },
 ]
 
-project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-sounds_dir = os.path.join(project_root, "data", "sounds")
-os.makedirs(sounds_dir, exist_ok=True)
-
-for params in click_variations:
+def generate_click_sound(params: ClickParams, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
+    """Generate a single click sound based on parameters.
+    
+    Args:
+        params: Click sound parameters (frequency, duration, etc.)
+        sample_rate: Audio sample rate in Hz
+        
+    Returns:
+        NumPy array of int16 audio samples
+    """
+    # Generate time array
     t = np.linspace(0, params["duration"], int(sample_rate * params["duration"]), False)
+    
+    # Generate sine wave if frequency > 0
     if params["frequency"] > 0:
         sine_wave = params["sine_amp"] * np.sin(2 * np.pi * params["frequency"] * t)
     else:
-        sine_wave = 0
+        sine_wave = np.zeros_like(t)
+    
+    # Add noise
     noise = params["noise_amp"] * np.random.normal(0, 0.2, t.size)
     click = sine_wave + noise
+    
+    # Apply exponential decay envelope
     envelope = np.exp(-params["decay"] * t / params["duration"])
     click = click * envelope
-    click = click / np.max(np.abs(click)) * 0.9
+    
+    # Normalize to 90% of max amplitude
+    max_amplitude = np.max(np.abs(click))
+    if max_amplitude > 0:
+        click = click / max_amplitude * 0.9
+    
+    # Convert to int16 (16-bit audio)
     click = (click * 32767).astype(np.int16)
-
+    
+    # Create double click if requested
     if params["double"]:
-        silence = np.zeros(int(0.001 * sample_rate), dtype=np.int16)  # 1ms gap
+        silence_duration = 0.001  # 1ms gap
+        silence = np.zeros(int(silence_duration * sample_rate), dtype=np.int16)
         click = np.concatenate([click, silence, click])
+    
+    return click
 
-    wavfile.write(os.path.join(sounds_dir, params["filename"]), sample_rate, click)
+
+def main() -> None:
+    """Generate all click sound variations and save to disk."""
+    # Set random seed for reproducible sound generation
+    np.random.seed(RANDOM_SEED)
+    
+    # Determine output directory
+    project_root = Path(__file__).parent.parent
+    sounds_dir = project_root / "data" / "sounds"
+    sounds_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate all click variations
+    for params in click_variations:
+        click = generate_click_sound(params)
+        output_path = sounds_dir / params["filename"]
+        wavfile.write(str(output_path), SAMPLE_RATE, click)
+        print(f"Generated: {output_path}")
+
+
+if __name__ == "__main__":
+    main()

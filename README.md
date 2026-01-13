@@ -1,18 +1,17 @@
 # 🎵 BTCBeeper: Live BTC Audio & Visual Tape
 
-BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator. It streams live trades from Coinbase, displays rich statistics, and generates Geiger-counter-style audio feedback based on trading activity. Choose from a modern web UI, or a terminal-based CLI.
+BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator. It streams live trades directly from Coinbase, displays rich statistics in a terminal-based interface, and generates Geiger-counter-style audio feedback based on trading activity.
 
 ---
 
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
-- [UI Options & Examples](#ui-options--examples)
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Installation](#installation)
 - [Usage](#usage)
 - [Audio Features](#audio-features)
-- [API & Data Flow](#api--data-flow)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License & Disclaimer](#license--disclaimer)
@@ -20,59 +19,67 @@ BTCBeeper is a real-time Bitcoin (BTC/USD) trade visualizer and audio generator.
 ---
 
 ## Overview
-BTCBeeper brings the excitement of the trading floor to your screen and speakers. It visualizes live BTC/USD trades and statistics, and turns every trade into a satisfying click or tone, just like a Geiger counter for Bitcoin volume.
+BTCBeeper brings the excitement of the trading floor to your terminal and speakers. It visualizes live BTC/USD trades and statistics in a beautiful TUI (Text User Interface), and turns every trade into a satisfying click or tone, just like a Geiger counter for Bitcoin volume.
 
 ---
 
 ## Features
-- **Real-time BTC/USD trade streaming** from Coinbase Advanced Trade API
-- **Multiple UI options:**
-  - Modern web dashboard (Svelte, Web Audio API)
-  - Terminal-based CLI (Rich, Pygame)
-- **Audio feedback** (Geiger counter clicks)
-- **Live price, trade stats, and order book**
-- **Customizable audio** (multiple click sounds)
-- **Responsive, modern design**
-- **Docker & cross-platform support**
+- **Real-time BTC/USD trade streaming** directly from Coinbase WebSocket API
+- **Terminal-based TUI** built with Textual (modern, responsive interface)
+- **Audio feedback** (Geiger counter clicks via Pygame for each qualifying trade)
+- **Live statistics tracking:**
+  - Current BTC/USD price with color-coded animations (green up, red down)
+  - Total trades count
+  - Volume today (cumulative BTC)
+  - Trades per second (TPS) with rolling 10-second window
+  - Highest TPS recorded
+  - Average trade size
+  - Largest trade details
+- **Trade size filtering** (5 adjustable levels: 0.0001, 0.001, 0.01, 0.1, 1.0 BTC)
+- **Bot detection** (identifies patterns of 5+ trades with identical size in recent activity)
+- **Recent trades table** (displays last 10 qualifying trades with side, price, and size)
+- **Customizable audio** (10 pre-generated click sound variations)
+- **Automatic reconnection** (handles WebSocket disconnections with retry logic)
+- **Cross-platform support** (Linux, macOS, Windows)
 
 ---
 
-## UI Options & Examples
+## Screenshots
 
-### 1. Terminal CLI Visualizer
+### Terminal CLI Visualizer
 A retro, text-based interface for your terminal. See live stats and hear clicks for every trade.
 
 ![CLI Example](data/images/BTCBeeper-cli-example.png)
 
-- Live price, trades, TPS, volume, and more
-- Recent trades list
+- Live price with color-coded animations (green for up, red for down)
+- Real-time trades table
+- TPS (trades per second) tracking
+- Volume and trade statistics
+- Bot activity detection banner
 - Toggle audio with 'a' key
+- Adjustable trade size filter with `[` and `]` keys
 
-### 2. Web Audio Visualizer
-A modern, interactive dashboard in your browser. Visualize trades, stats, and order book, with real-time audio.
-
-![Web Example](data/images/BTCBeeper-web-example.png)
-
-- Live price, 24h stats, order book, and recent trades
-- Audio on/off toggle
-- Volume intensity and trade direction visualization
-
-
+---
 
 ## Architecture
-- **Backend:** Python FastAPI, WebSocket, connects to Coinbase, streams BTC trades
-- **Frontend:** Svelte, Web Audio API, modern UI
-- **CLI:** Python, Rich (for TUI), Pygame (for audio)
-- **Audio:** Geiger counter click generator (custom WAVs)
+- **Entry Point:** `main.py` - Initializes pygame mixer and launches the TUI application
+- **Core Application:** `src/cli.py` - Main TUI application using Textual framework
+- **WebSocket Client:** Direct connection to Coinbase WebSocket feed (`wss://ws-feed.exchange.coinbase.com`)
+- **Audio System:** Pygame mixer for WAV file playback
+- **Sound Generator:** `src/click_generator.py` - Optional script to generate custom click sounds (requires numpy/scipy)
+- **Data Source:** Coinbase WebSocket API - Subscribes to `matches`, `ticker`, and `heartbeat` channels for BTC-USD
+- **Dependencies:** 
+  - `websockets` - WebSocket client library
+  - `textual` - Terminal UI framework
+  - `pygame` - Audio playback
+  - `numpy`, `scipy` - Optional, only needed for generating click sounds
 
 ---
 
 ## Installation
 ### Prerequisites
 - Python 3.8+
-- Node.js 14+
-- Modern browser (Web Audio API support)
-- (Optional) Coinbase API credentials
+- Sound device (for audio feedback)
 
 ### 1. Clone the Repository
 ```bash
@@ -80,92 +87,110 @@ git clone <repository-url>
 cd BTCBeeper
 ```
 
-### 2. Backend Setup
+### 2. Setup Python Environment
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r src/requirements.txt
+pip install -r requirements.txt
 ```
 
-### 3. Environment Configuration
+**Note:** The click sound files are already included in `data/sounds/`, so you can run the application immediately. If you want to regenerate or customize the click sounds, you'll need additional dependencies:
 ```bash
-cp .env.example .env
-# Edit .env for API keys (optional)
-```
-
-### 4. Frontend Setup
-```bash
-cd src
-npm install
-```
-
-### 5. (Optional) Docker
-```bash
-docker-compose up --build
+pip install numpy scipy
+python src/click_generator.py
 ```
 
 ---
 
 ## Usage
-### Web UI
-1. Start backend:
-   ```bash
-   python src/main.py
-   # or with Docker: docker-compose up
-   ```
-2. Start frontend:
-   ```bash
-   cd src
-   npm run dev
-   ```
-3. Open [http://localhost:8080](http://localhost:8080)
 
-### CLI Visualizer
-1. Start backend (as above)
-2. In a new terminal:
+### Running the TUI Application
+1. Activate your virtual environment:
+   ```bash
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
+
+2. Run the application:
+   ```bash
+   python main.py
+   ```
+   
+   Or run directly from the src module:
    ```bash
    python src/cli.py
    ```
-3. Press 'a' to toggle audio on/off
+
+3. The application will:
+   - Connect directly to Coinbase WebSocket
+   - Display live BTC/USD price and trades
+   - Play audio clicks for each trade (if enabled)
+
+### Keyboard Controls
+- **`a`** - Toggle audio on/off
+- **`[`** - Decrease minimum trade size filter
+- **`]`** - Increase minimum trade size filter
+- **`Ctrl+C`** - Exit the application
+
+### Trade Size Filters
+The application supports multiple filter levels to focus on trades of different sizes:
+- `0.0001` BTC (smallest)
+- `0.001` BTC
+- `0.01` BTC
+- `0.1` BTC
+- `1.0` BTC (largest)
+
+Only trades meeting the minimum size threshold will:
+- Be counted in statistics
+- Trigger audio clicks
+- Appear in the trades table
 
 ---
 
 ## Audio Features
-- **Trade size → click frequency** (larger trades = lower pitch)
-- **Buy/Sell → different click tones**
-- **Volume intensity → click volume**
-- **Multiple click sound variations** (see `data/sounds/`)
-- **Web:** Uses browser Web Audio API
-- **CLI:** Uses Pygame for WAV playback
+- **Geiger counter-style clicks** for each trade that passes the size filter
+- **Multiple click sound variations** (10 pre-generated sounds: `geiger_click1.wav` through `geiger_click10.wav`)
+- **Uses Pygame** for WAV playback
+- **Toggleable audio** (press 'a' to enable/disable)
 
----
+The default click sound is `geiger_click7.wav`. You can modify `CLICK_SOUND_PATH` in `src/cli.py` to use a different sound file from the `data/sounds/` directory.
 
-## API & Data Flow
-- **WebSocket endpoint:** `/ws` (real-time BTC data)
-- **Sample message:**
-  ```json
-  {
-    "type": "btc_trade",
-    "data": {
-      "price": 45000.50,
-      "size": 0.123456,
-      "side": "buy",
-      "timestamp": "2023-01-01T12:00:00Z",
-      "trade_id": "12345"
-    }
-  }
-  ```
-- **Other endpoints:**
-  - `/health` (status)
-  - `/btc/channels` (available data channels)
+### Generating Custom Click Sounds
+The project includes a click sound generator (`src/click_generator.py`) that creates 10 variations of Geiger counter-style clicks with different frequencies, durations, and noise characteristics. To regenerate the sounds:
+```bash
+pip install numpy scipy  # Required only for sound generation
+python src/click_generator.py
+```
+This will generate WAV files in `data/sounds/` with various characteristics (frequency, duration, noise level, decay rate).
 
 ---
 
 ## Troubleshooting
-- **WebSocket Connection Failed:** Ensure backend is running on port 8000
-- **Audio Not Working:** Check browser permissions or Pygame install
-- **No Trade Data:** Verify Coinbase connectivity
-- **CLI Audio:** Press 'a' to toggle, ensure sound device is available
+
+### Connection Issues
+- **WebSocket Connection Failed:** 
+  - Check your internet connection and ensure Coinbase WebSocket is accessible
+  - The application will automatically attempt to reconnect up to 5 times with 5-second delays
+  - If max reconnection attempts are reached, restart the application
+- **No Trade Data:** 
+  - The application connects directly to Coinbase. If no data appears, check your network connection
+  - Ensure you're subscribed to the correct channels (matches, ticker, heartbeat)
+  - Check that your trade size filter isn't set too high (press `[` to decrease)
+
+### Audio Issues
+- **Audio Not Working:** 
+  - Press 'a' to toggle audio on/off
+  - Ensure your sound device is available
+  - Check that the click sound file exists at `data/sounds/geiger_click7.wav`
+  - On Linux, you may need to install `python3-pygame` or similar
+
+### Display Issues
+- **Terminal Too Small:** Ensure your terminal window is at least 80x24 characters for proper rendering
+- **Text Rendering Issues:** Use a modern terminal emulator that supports Unicode and ANSI colors
+- **Price Not Updating:** Check that trades are being received (look for TPS > 0 in stats). If TPS is 0, your filter may be too high or there may be a connection issue
+
+### Statistics Not Updating
+- **Zero TPS:** Your trade size filter may be too high. Press `[` to decrease the minimum trade size
+- **No Recent Trades:** Check that trades are passing your size filter. The table shows only the last 10 qualifying trades
 
 ---
 
@@ -173,12 +198,10 @@ docker-compose up --build
 - Fork the repo, create a feature branch, submit a PR
 - Follow PEP8 and code quality guidelines
 - Add docstrings and comments for financial logic
+- Test your changes before submitting
 
 ---
 
 ## License & Disclaimer
 - MIT License
 - For educational/entertainment use only. Not financial advice.
-
-
-
