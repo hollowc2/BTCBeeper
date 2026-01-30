@@ -237,24 +237,44 @@ class TestWebSocketMessageTypes:
 class TestSubscriptionMessage:
     """Test WebSocket subscription message construction."""
 
-    def test_subscription_message_structure(self, btc_app):
-        """Verify subscription message has correct structure."""
-        expected_channels = ["matches", "ticker", "heartbeat"]
-        expected_product = "BTC-USD"
+    @pytest.mark.asyncio
+    async def test_subscription_message_matches_coinbase_api(self, btc_app):
+        """Verify subscription message matches Coinbase WebSocket API requirements.
 
-        # Construct expected message
-        expected = {
-            "type": "subscribe",
-            "product_ids": [expected_product],
-            "channels": expected_channels,
-        }
+        The actual message sent is captured and verified in test_sends_subscription_message.
+        This test verifies the format matches Coinbase's documented API structure.
+        See: https://docs.cdp.coinbase.com/exchange/docs/websocket-overview
+        """
+        messages_sent = []
+        connection_count = [0]
 
-        # Verify by checking what would be sent
-        subscribe_msg = json.dumps({
-            "type": "subscribe",
-            "product_ids": ["BTC-USD"],
-            "channels": ["matches", "ticker", "heartbeat"],
-        })
+        def mock_connect(*args, **kwargs):
+            connection_count[0] += 1
+            if connection_count[0] > 1:
+                raise websockets.exceptions.WebSocketException("Test complete")
+            mock_ws = create_mock_websocket(send_capture=messages_sent)
+            return AsyncContextManagerMock(mock_ws)
 
-        parsed = json.loads(subscribe_msg)
-        assert parsed == expected
+        with patch('websockets.connect', side_effect=mock_connect):
+            with patch('asyncio.sleep', new_callable=AsyncMock):
+                await btc_app._ws_loop()
+
+        # Verify actual message sent by the app
+        assert len(messages_sent) >= 1
+        sub_msg = json.loads(messages_sent[0])
+
+        # Coinbase API requirements:
+        # - type must be "subscribe"
+        # - product_ids must be a list of valid product IDs
+        # - channels must be a list of channel names
+        assert sub_msg["type"] == "subscribe", "Coinbase requires type='subscribe'"
+        assert isinstance(sub_msg["product_ids"], list), "product_ids must be a list"
+        assert isinstance(sub_msg["channels"], list), "channels must be a list"
+        assert len(sub_msg["product_ids"]) > 0, "At least one product required"
+        assert len(sub_msg["channels"]) > 0, "At least one channel required"
+
+        # Verify BTC-USD is subscribed
+        assert "BTC-USD" in sub_msg["product_ids"]
+
+        # Verify essential channels for trade data
+        assert "matches" in sub_msg["channels"], "matches channel required for trade data"

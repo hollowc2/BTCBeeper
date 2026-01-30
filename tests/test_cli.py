@@ -53,17 +53,19 @@ class TestProcessMessage:
         assert "[Error]:" in call_args
         assert "Test error message" in call_args
 
-    def test_invalid_json_silently_ignored(self, btc_app):
-        """Verify malformed JSON doesn't crash the app."""
+    def test_invalid_json_tracked_as_parse_error(self, btc_app):
+        """Verify malformed JSON doesn't crash and is tracked."""
         btc_app._handle_trade = MagicMock()
         btc_app._process_message("{invalid json")
         btc_app._handle_trade.assert_not_called()
+        assert btc_app.stats["parse_errors"] == 1
 
-    def test_empty_message_silently_ignored(self, btc_app):
-        """Verify empty message doesn't crash."""
+    def test_empty_message_tracked_as_parse_error(self, btc_app):
+        """Verify empty message doesn't crash and is tracked."""
         btc_app._handle_trade = MagicMock()
         btc_app._process_message("")
         btc_app._handle_trade.assert_not_called()
+        assert btc_app.stats["parse_errors"] == 1
 
     def test_wrong_product_id_ignored(self, btc_app, sample_trade_match):
         """Verify messages for other products are ignored."""
@@ -704,31 +706,43 @@ class TestInvalidInputHandling:
     """Test handling of invalid and malformed inputs."""
 
     def test_missing_price_field(self, btc_app):
-        """Verify missing price field raises appropriate error or is handled."""
+        """Verify missing price field is handled gracefully (trade ignored and tracked)."""
         trade_data = {"size": "0.5", "side": "buy"}
-        # Should raise KeyError when accessing data["price"]
-        with pytest.raises(KeyError):
-            btc_app._handle_trade(trade_data)
+        btc_app._handle_trade(trade_data)
+        # Trade should be silently ignored - no crash, no stats update
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
+
+    def test_missing_size_field(self, btc_app):
+        """Verify missing size field is handled gracefully (trade ignored and tracked)."""
+        trade_data = {"price": "50000.00", "side": "buy"}
+        btc_app._handle_trade(trade_data)
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
 
     def test_non_numeric_price(self, btc_app):
-        """Verify non-numeric price raises ValueError."""
+        """Verify non-numeric price is handled gracefully (trade ignored and tracked)."""
         trade_data = {"price": "invalid", "size": "0.5", "side": "buy"}
-        with pytest.raises(ValueError):
-            btc_app._handle_trade(trade_data)
+        btc_app._handle_trade(trade_data)
+        # Trade should be silently ignored - no crash, no stats update
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
 
     def test_non_numeric_size(self, btc_app):
-        """Verify non-numeric size raises ValueError."""
+        """Verify non-numeric size is handled gracefully (trade ignored and tracked)."""
         trade_data = {"price": "50000.00", "size": "big", "side": "buy"}
-        with pytest.raises(ValueError):
-            btc_app._handle_trade(trade_data)
+        btc_app._handle_trade(trade_data)
+        # Trade should be silently ignored - no crash, no stats update
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
 
     def test_null_values_in_message(self, btc_app):
-        """Verify null values in JSON are handled."""
+        """Verify null values in JSON are handled gracefully and tracked."""
         message = '{"type": "match", "price": null, "size": "0.5", "product_id": "BTC-USD"}'
-        btc_app._handle_trade = MagicMock()
         btc_app._process_message(message)
-        # Should be called but will fail in _handle_trade
-        btc_app._handle_trade.assert_called_once()
+        # Trade should be silently ignored due to null price
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
 
     def test_deeply_nested_json(self, btc_app):
         """Verify deeply nested JSON doesn't cause issues."""
@@ -758,16 +772,57 @@ class TestInvalidInputHandling:
         assert btc_app.stats["total_trades"] == 1
 
     def test_empty_string_price(self, btc_app):
-        """Verify empty string price raises ValueError."""
+        """Verify empty string price is handled gracefully (trade ignored)."""
         trade_data = {"price": "", "size": "0.5", "side": "buy"}
-        with pytest.raises(ValueError):
-            btc_app._handle_trade(trade_data)
+        btc_app._handle_trade(trade_data)
+        # Trade should be silently ignored - no crash, no stats update
+        assert btc_app.stats["total_trades"] == 0
+        assert btc_app.stats["invalid_trades"] == 1
 
     def test_whitespace_only_json(self, btc_app):
         """Verify whitespace-only message is handled."""
         btc_app._handle_trade = MagicMock()
         btc_app._process_message("   ")
         btc_app._handle_trade.assert_not_called()
+
+
+class TestErrorTracking:
+    """Test error tracking for observable failure monitoring."""
+
+    def test_parse_errors_tracked(self, btc_app):
+        """Verify JSON parse errors are tracked in stats."""
+        btc_app._process_message("{invalid json}")
+        btc_app._process_message("not json at all")
+        btc_app._process_message("")
+        assert btc_app.stats["parse_errors"] == 3
+
+    def test_invalid_trades_missing_price_tracked(self, btc_app):
+        """Verify trades with missing price are tracked."""
+        btc_app._handle_trade({"size": "0.5", "side": "buy"})
+        assert btc_app.stats["invalid_trades"] == 1
+
+    def test_invalid_trades_missing_size_tracked(self, btc_app):
+        """Verify trades with missing size are tracked."""
+        btc_app._handle_trade({"price": "50000", "side": "buy"})
+        assert btc_app.stats["invalid_trades"] == 1
+
+    def test_invalid_trades_bad_values_tracked(self, btc_app):
+        """Verify trades with non-numeric values are tracked."""
+        btc_app._handle_trade({"price": "bad", "size": "0.5", "side": "buy"})
+        btc_app._handle_trade({"price": "50000", "size": "bad", "side": "buy"})
+        assert btc_app.stats["invalid_trades"] == 2
+
+    def test_valid_trade_does_not_increment_errors(self, btc_app):
+        """Verify valid trades don't affect error counters."""
+        btc_app._handle_trade({"price": "50000", "size": "0.5", "side": "buy"})
+        assert btc_app.stats["invalid_trades"] == 0
+        assert btc_app.stats["parse_errors"] == 0
+        assert btc_app.stats["total_trades"] == 1
+
+    def test_error_counters_initialized_to_zero(self, btc_app):
+        """Verify error counters start at zero."""
+        assert btc_app.stats["parse_errors"] == 0
+        assert btc_app.stats["invalid_trades"] == 0
 
 
 class TestOutputVerification:

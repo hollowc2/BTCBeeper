@@ -73,6 +73,8 @@ class BTCBeeperApp(App):
             "largest_trade": None,
             "tps": 0.0,
             "highest_tps": 0.0,
+            "parse_errors": 0,
+            "invalid_trades": 0,
         }
         self.recent_trades: list[dict] = []
         self.trade_timestamps: list[float] = []
@@ -122,6 +124,7 @@ class BTCBeeperApp(App):
         try:
             data = json.loads(message)
         except json.JSONDecodeError:
+            self.stats["parse_errors"] += 1
             return
 
         if data.get("product_id") not in ["BTC-USD", None]:
@@ -140,12 +143,23 @@ class BTCBeeperApp(App):
             self.stats_widget.update(f"[Error]: {data.get('message', 'Unknown error')}")
 
     def _handle_trade(self, data: dict) -> None:
-        trade_size = float(data.get("size", 0))
+        # Validate required fields exist before processing
+        if "price" not in data or "size" not in data:
+            self.stats["invalid_trades"] += 1
+            return
+
+        try:
+            trade_size = float(data["size"])
+            trade_price = float(data["price"])
+        except (ValueError, TypeError):
+            self.stats["invalid_trades"] += 1
+            return
+
         if trade_size < self.get_min_trade_size():
             return
 
         trade = {
-            "price": float(data["price"]),
+            "price": trade_price,
             "size": trade_size,
             "side": data.get("side", "unknown"),
         }

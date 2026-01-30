@@ -6,3 +6,7 @@ pygame==2.6.1
 # Optional dependencies for click_generator.py (sound file generation)
 numpy==2.3.1
 scipy==1.16.0
+
+# Testing dependencies
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
