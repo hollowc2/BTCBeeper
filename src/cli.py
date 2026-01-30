@@ -1,15 +1,24 @@
 import asyncio
 import json
+import logging
+import os
 import time
 
 import pygame
 import websockets
+
+logging.basicConfig(
+    filename="btcbeeper.log",
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
+logger = logging.getLogger(__name__)
 from textual.app import App, ComposeResult
 from textual.timer import Timer
 from textual.widgets import DataTable, Static
 
-CLICK_SOUND_PATH = "data/sounds/geiger_click7.wav"
-COINBASE_WS_URL = "wss://ws-feed.exchange.coinbase.com"
+CLICK_SOUND_PATH = os.getenv("BTCBEEPER_SOUND_PATH", "data/sounds/geiger_click7.wav")
+COINBASE_WS_URL = os.getenv("COINBASE_WS_URL", "wss://ws-feed.exchange.coinbase.com")
 
 TPS_WINDOW = 10
 MAX_RECENT_TRADES = 1000
@@ -110,21 +119,25 @@ class BTCBeeperApp(App):
                 async with websockets.connect(COINBASE_WS_URL) as ws:
                     await ws.send(subscribe_msg)
                     reconnect_attempts = 0
+                    logger.info("Connected to %s", COINBASE_WS_URL)
                     async for message in ws:
                         self._process_message(message)
             except (websockets.exceptions.WebSocketException, ConnectionError, OSError) as e:
                 reconnect_attempts += 1
+                logger.warning("Connection error: %s (attempt %d/%d)", e, reconnect_attempts, MAX_RECONNECT_ATTEMPTS)
                 self.stats_widget.update(f"[Connection Error]: {e}. Reconnecting... ({reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS})")
                 if reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
                     await asyncio.sleep(RECONNECT_DELAY)
                 else:
+                    logger.error("Max reconnection attempts reached, giving up")
                     self.stats_widget.update("[Connection Failed]: Max reconnection attempts reached.")
 
     def _process_message(self, message: str) -> None:
         try:
             data = json.loads(message)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
             self.stats["parse_errors"] += 1
+            logger.debug("JSON parse error: %s", e)
             return
 
         if data.get("product_id") not in ["BTC-USD", None]:
@@ -146,13 +159,15 @@ class BTCBeeperApp(App):
         # Validate required fields exist before processing
         if "price" not in data or "size" not in data:
             self.stats["invalid_trades"] += 1
+            logger.debug("Invalid trade: missing price or size field")
             return
 
         try:
             trade_size = float(data["size"])
             trade_price = float(data["price"])
-        except (ValueError, TypeError):
+        except (ValueError, TypeError) as e:
             self.stats["invalid_trades"] += 1
+            logger.debug("Invalid trade: %s", e)
             return
 
         if trade_size < self.get_min_trade_size():

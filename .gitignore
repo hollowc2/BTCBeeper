@@ -72,6 +72,7 @@ dmypy.json
 # Logs
 *.log
 logs/
+btcbeeper.log
 
 # OS
 .DS_Store
