@@ -1,5 +1,3 @@
-"""Pytest configuration and shared fixtures for BTCBeeper tests."""
-
 import time
 from unittest.mock import MagicMock, patch
 
