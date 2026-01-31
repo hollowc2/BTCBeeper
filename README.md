@@ -72,7 +72,7 @@ Watch BTCBeeper in action with real-time trade updates:
 ---
 
 ## Architecture
-- **Entry Point:** `main.py` - Initializes pygame mixer and launches the TUI application
+- **Entry Point:** `src/main.py` - Initializes pygame mixer and launches the TUI application
 - **Core Application:** `src/cli.py` - Main TUI application using Textual framework
 - **WebSocket Client:** Direct connection to Coinbase WebSocket feed (`wss://ws-feed.exchange.coinbase.com`)
 - **Audio System:** Pygame mixer for WAV file playback
@@ -122,9 +122,9 @@ python src/click_generator.py
 
 2. Run the application:
    ```bash
-   python main.py
+   python -m src.main
    ```
-   
+
    Or run directly from the src module:
    ```bash
    python src/cli.py

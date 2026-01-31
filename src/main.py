@@ -2,13 +2,10 @@
 """BTCBeeper - Live BTC Audio & Visual Tape."""
 
 import os
-import sys
-from pathlib import Path
 
 import pygame
 
-sys.path.insert(0, str(Path(__file__).parent / "src"))
-import cli as cli_module
+from . import cli as cli_module
 
 
 def main() -> None:

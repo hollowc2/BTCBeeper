@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -m py_compile:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nrefactor: improve code quality and maintainability\n\n- Eliminate global state by moving stats into BTCBeeperApp class\n- Remove dead code \\(unused price_change_24h, duplicate __main__\\)\n- Extract complex logic into focused methods \\(_handle_trade, _check_bot_activity\\)\n- Fix missing Path import in click_generator\n- Simplify WebSocket connection loop\n- Compact CSS and data structures\n- Remove redundant hasattr checks and unused imports\n- Improve encapsulation with private methods \\(_update_tps, _play_click, etc\\)\n\nChanges reduce lines of code by 42% \\(main\\), 29% \\(cli\\), 61% \\(click_generator\\)\nwhile improving clarity and removing antipatterns.\n\nCo-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(wc:*)",
+      "Bash(pip install:*)",
+      "Bash(python -m pytest:*)"
+    ]
+  }
+}
