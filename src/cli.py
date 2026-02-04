@@ -19,6 +19,7 @@ from textual.timer import Timer
 from textual.widgets import DataTable, Static
 
 CLICK_SOUND_PATH = os.getenv("BTCBEEPER_SOUND_PATH", "data/sounds/geiger_click7.wav")
+SELL_SOUND_PATH = os.getenv("BTCBEEPER_SELL_SOUND_PATH", "data/sounds/geiger_click4.wav")
 COINBASE_WS_URL = os.getenv("COINBASE_WS_URL", "wss://ws-feed.exchange.coinbase.com")
 
 TPS_WINDOW = 10
@@ -32,6 +33,7 @@ STATS_REFRESH_INTERVAL = 0.5
 ANIMATION_DURATION = 0.5
 
 click_sound = None
+click_sound_sell = None
 
 class PriceWidget(Static):
     """Widget for displaying BTC/USD price with animation effects."""
@@ -299,7 +301,7 @@ class BTCBeeperApp(App):
             self.stats["session_low"] = trade_price
         self.stats["volume_usd"] += trade_size * trade_price
 
-        self._play_click()
+        self._play_click(trade["side"])
 
         if prev_price:
             if trade["price"] > prev_price:
@@ -316,9 +318,12 @@ class BTCBeeperApp(App):
         self.stats["tps"] = len(self.trade_timestamps) / TPS_WINDOW
         self.stats["highest_tps"] = max(self.stats["highest_tps"], self.stats["tps"])
 
-    def _play_click(self) -> None:
-        if self.audio_enabled and click_sound:
-            click_sound.play()
+    def _play_click(self, side: str = "buy") -> None:
+        if not self.audio_enabled:
+            return
+        sound = click_sound_sell if side == "sell" else click_sound
+        if sound:
+            sound.play()
 
     def action_toggle_audio(self) -> None:
         self.audio_enabled = not self.audio_enabled
