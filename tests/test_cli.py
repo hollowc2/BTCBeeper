@@ -426,13 +426,13 @@ class TestRefreshStats:
         btc_app.refresh_stats()
 
         call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "Total Trades: 100" in call_args
-        assert "Session Volume: 50.500000 BTC" in call_args
-        assert "Trades/sec (TPS): 2.50" in call_args
-        assert "Highest TPS: 5.00" in call_args
-        assert "Avg Trade Size: 0.505000 BTC" in call_args
-        assert "Largest Trade:" in call_args
-        assert "Audio:" in call_args
+        assert "100" in call_args
+        assert "50.5 BTC" in call_args
+        assert "2.50" in call_args
+        assert "5.00" in call_args
+        assert "0.505 BTC" in call_args
+        assert "Largest" in call_args
+        assert "Audio" in call_args
 
     def test_refresh_filters_trades_table(self, btc_app):
         btc_app.filter_index = 2  # 0.01 BTC
@@ -694,14 +694,16 @@ class TestOutputVerification:
         btc_app.refresh_stats()
 
         call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "Total Trades: 42" in call_args
-        assert "Session Volume: 123.456789 BTC" in call_args
-        assert "Trades/sec (TPS): 3.50" in call_args
-        assert "Highest TPS: 7.20" in call_args
-        assert "Avg Trade Size: 2.939447 BTC" in call_args
-        assert "Min Trade Size: 0.01 BTC" in call_args
-        assert "Largest Trade: Sell 10.500000 BTC @ $65000.00" in call_args
-        assert "Audio: OFF" in call_args
+        assert "42" in call_args
+        assert "123.456789 BTC" in call_args
+        assert "3.50" in call_args
+        assert "7.20" in call_args
+        assert "2.939447 BTC" in call_args
+        assert "0.01 BTC" in call_args
+        assert "Sell" in call_args
+        assert "10.5 BTC" in call_args
+        assert "$65,000.00" in call_args
+        assert "OFF" in call_args
 
     def test_trades_table_row_format(self, btc_app):
         btc_app.recent_trades = [

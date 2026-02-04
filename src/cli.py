@@ -87,6 +87,12 @@ class HeatmapWidget(Static):
                 lines.append(f"[dim]{label:>12}[/]  [dim]{count:>4}[/]  [{color}]{bar}[/]")
         self.update("\n".join(lines))
 
+
+def _fmt_btc(value: float) -> str:
+    """Format BTC with 6-decimal precision, stripping trailing zeros."""
+    return f"{value:.6f}".rstrip("0").rstrip(".")
+
+
 class BTCBeeperApp(App):
     CSS = """
     BTCBeeperApp {
@@ -148,6 +154,7 @@ class BTCBeeperApp(App):
     """
     FILTER_SIZES = [0.0001, 0.001, 0.01, 0.1, 1]
     BINDINGS = [
+        ("q", "quit", "Quit"),
         ("a", "toggle_audio", "Toggle Audio"),
         ("[", "filter_down", "Decrease Min Trade Size"),
         ("]", "filter_up", "Increase Min Trade Size"),
@@ -355,22 +362,46 @@ class BTCBeeperApp(App):
         session_low = s.get("session_low", 0.0)
         volume_usd = s.get("volume_usd", 0.0)
 
+        low_line = (
+            f"[dim]Low     [/] [bright_yellow]${session_low:,.2f}[/]"
+            if session_low != float("inf")
+            else "[dim]Low     [/] [dim]N/A[/]"
+        )
+
         lines = [
-            f"Uptime:           {uptime}",
-            f"Session High:     ${session_high:,.2f}",
-            f"Session Low:      ${session_low:,.2f}" if session_low != float("inf") else "Session Low:      N/A",
-            f"Session Volume: {s['session_volume']:.6f} BTC (${volume_usd:,.2f} USD)",
-            f"Total Trades: {s['total_trades']}",
-            f"Trades/sec (TPS): {s['tps']:.2f}",
-            f"Highest TPS: {s['highest_tps']:.2f}",
-            f"Avg Trade Size: {s['avg_trade_size']:.6f} BTC",
-            f"Min Trade Size: {min_size} BTC (press '[' or ']' to adjust)",
+            "[dim]─── SESSION ────────[/]",
+            f"[dim]Uptime  [/] {uptime}",
+            f"[dim]High    [/] [bright_yellow]${session_high:,.2f}[/]",
+            low_line,
+            "",
+            "[dim]─── TRADES ─────────[/]",
+            f"[dim]Total   [/] [bright_white]{s['total_trades']}[/] trades",
+            f"[dim]Volume  [/] [bright_cyan]{_fmt_btc(s['session_volume'])} BTC[/]",
+            f"[dim]USD Vol [/] [bright_yellow]${volume_usd:,.2f}[/]",
+            f"[dim]Avg Size[/] [bright_cyan]{_fmt_btc(s['avg_trade_size'])} BTC[/]",
         ]
+
         if s["largest_trade"]:
             lt = s["largest_trade"]
-            lines.append(f"Largest Trade: {lt['side'].capitalize()} {lt['size']:.6f} BTC @ ${lt['price']:.2f}")
-        lines.append(f"Audio: {'ON' if self.audio_enabled else 'OFF'} (press 'a' to toggle)")
-        lines.append(f"Errors:           {s.get('parse_errors', 0)} parse, {s.get('invalid_trades', 0)} invalid")
+            side_color = "bright_green" if lt["side"] == "buy" else "bright_red"
+            lines.append(
+                f"[dim]Largest [/] [{side_color}]{lt['side'].capitalize()}[/] "
+                f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/] @ [bright_yellow]${lt['price']:,.2f}[/]"
+            )
+
+        lines.extend([
+            "",
+            "[dim]─── ACTIVITY ───────[/]",
+            f"[dim]TPS     [/] {s['tps']:.2f}  [dim]peak[/] {s['highest_tps']:.2f}",
+            f"[dim]Filter  [/] ≥ {min_size} BTC",
+            "[dim]Audio   [/] " + ("[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"),
+        ])
+
+        errors_p = s.get("parse_errors", 0)
+        errors_i = s.get("invalid_trades", 0)
+        if errors_p or errors_i:
+            lines.append(f"[dim]Errors  [/] [bright_red]{errors_p} parse  {errors_i} invalid[/]")
+
         self.stats_widget.update("\n".join(lines))
 
         filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
