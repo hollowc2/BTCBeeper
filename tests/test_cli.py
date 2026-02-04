@@ -702,7 +702,6 @@ class TestOutputVerification:
         assert "0.01 BTC" in call_args
         assert "Sell" in call_args
         assert "10.5 BTC" in call_args
-        assert "$65,000.00" in call_args
         assert "OFF" in call_args
 
     def test_trades_table_row_format(self, btc_app):

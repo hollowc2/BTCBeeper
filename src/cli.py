@@ -123,12 +123,14 @@ class BTCBeeperApp(App):
 
     #stats {
         width: 1fr;
+        height: 1fr;
         padding: 1;
         border-right: solid $surface;
     }
 
     #trades {
         width: 1fr;
+        height: 1fr;
         padding: 0 1;
     }
 
@@ -386,7 +388,7 @@ class BTCBeeperApp(App):
             side_color = "bright_green" if lt["side"] == "buy" else "bright_red"
             lines.append(
                 f"[dim]Largest [/] [{side_color}]{lt['side'].capitalize()}[/] "
-                f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/] @ [bright_yellow]${lt['price']:,.2f}[/]"
+                f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/]"
             )
 
         lines.extend([
