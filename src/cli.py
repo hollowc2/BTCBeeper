@@ -6,6 +6,10 @@ import time
 
 import pygame
 import websockets
+from textual.app import App, ComposeResult
+from textual.containers import Horizontal
+from textual.timer import Timer
+from textual.widgets import DataTable, Static
 
 logging.basicConfig(
     filename="btcbeeper.log",
@@ -13,10 +17,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
 logger = logging.getLogger(__name__)
-from textual.app import App, ComposeResult
-from textual.containers import Horizontal
-from textual.timer import Timer
-from textual.widgets import DataTable, Static
 
 CLICK_SOUND_PATH = os.getenv("BTCBEEPER_SOUND_PATH", "data/sounds/geiger_click7.wav")
 SELL_SOUND_PATH = os.getenv("BTCBEEPER_SELL_SOUND_PATH", "data/sounds/geiger_click4.wav")
@@ -36,8 +36,6 @@ click_sound = None
 click_sound_sell = None
 
 class PriceWidget(Static):
-    """Widget for displaying BTC/USD price with animation effects."""
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.anim_timer: Timer | None = None
@@ -56,17 +54,9 @@ class PriceWidget(Static):
         self.remove_class("price-down")
 
 class HeatmapWidget(Static):
-    """Widget for displaying a trade-size distribution heatmap."""
-
     LABELS = ["< 0.0001", "0.0001\u20130.001", "0.001\u20130.01", "0.01\u20130.1", "0.1\u20131.0", "\u2265 1.0"]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.counts: list[int] = [0] * 6
-
     def update_heatmap(self, counts: list[int]) -> None:
-        """Render the 6-bucket size distribution as colored bars."""
-        self.counts = counts
         max_count = max(counts) or 1
         lines = []
         for label, count in zip(self.LABELS, counts):
@@ -89,7 +79,6 @@ class HeatmapWidget(Static):
 
 
 def _fmt_btc(value: float) -> str:
-    """Format BTC with 6-decimal precision, stripping trailing zeros."""
     return f"{value:.6f}".rstrip("0").rstrip(".")
 
 
@@ -186,7 +175,6 @@ class BTCBeeperApp(App):
         self.trade_timestamps: list[float] = []
         self._expanded_trade: dict | None = None
         self._detail_row_keys: list = []
-        self._expansion_active: bool = False
         self._trade_row_map: dict = {}
 
     def compose(self) -> ComposeResult:
@@ -205,9 +193,6 @@ class BTCBeeperApp(App):
 
     async def on_mount(self) -> None:
         self.set_interval(STATS_REFRESH_INTERVAL, self.refresh_stats)
-        self._start_websocket()
-
-    def _start_websocket(self) -> None:
         self.run_worker(self._ws_loop, exclusive=True)
 
     async def _ws_loop(self) -> None:
@@ -260,7 +245,6 @@ class BTCBeeperApp(App):
             self.stats_widget.update(f"[Error]: {data.get('message', 'Unknown error')}")
 
     def _handle_trade(self, data: dict) -> None:
-        # Validate required fields exist before processing
         if "price" not in data or "size" not in data:
             self.stats["invalid_trades"] += 1
             logger.debug("Invalid trade: missing price or size field")
@@ -281,7 +265,7 @@ class BTCBeeperApp(App):
             "price": trade_price,
             "size": trade_size,
             "side": data.get("side", "unknown"),
-            "trade_id": str(data.get("trade_id", "")),
+            "trade_id": data.get("trade_id", ""),
             "maker_order_id": data.get("maker_order_id", ""),
             "taker_order_id": data.get("taker_order_id", ""),
             "time": data.get("time", ""),
@@ -357,7 +341,6 @@ class BTCBeeperApp(App):
 
         self.price_widget.update_price(s["last_price"])
 
-        # Session counters — .get() keeps tests with partial stats dicts safe
         elapsed = int(time.time() - s.get("session_start", time.time()))
         uptime = f"{elapsed // 3600:02d}:{(elapsed % 3600) // 60:02d}:{elapsed % 60:02d}"
         session_high = s.get("session_high", 0.0)
@@ -412,7 +395,7 @@ class BTCBeeperApp(App):
         self.heatmap_widget.update_heatmap(self._compute_heatmap_buckets())
 
     def _update_trades_table(self, trades: list[dict]) -> None:
-        if self._expansion_active:
+        if self._expanded_trade:
             return
         self.trades_table.clear()
         self._trade_row_map.clear()
@@ -450,42 +433,37 @@ class BTCBeeperApp(App):
             self.bot_banner_timer = None
 
     def _compute_heatmap_buckets(self) -> list[int]:
-        """Classify recent trades into 6 size buckets based on FILTER_SIZES boundaries."""
         buckets = [0] * 6
-        boundaries = self.FILTER_SIZES  # [0.0001, 0.001, 0.01, 0.1, 1]
         for t in self.recent_trades:
             size = t["size"]
-            if size < boundaries[0]:
+            if size < self.FILTER_SIZES[0]:
                 buckets[0] += 1
-            elif size < boundaries[1]:
+            elif size < self.FILTER_SIZES[1]:
                 buckets[1] += 1
-            elif size < boundaries[2]:
+            elif size < self.FILTER_SIZES[2]:
                 buckets[2] += 1
-            elif size < boundaries[3]:
+            elif size < self.FILTER_SIZES[3]:
                 buckets[3] += 1
-            elif size < boundaries[4]:
+            elif size < self.FILTER_SIZES[4]:
                 buckets[4] += 1
             else:
                 buckets[5] += 1
         return buckets
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        """Handle row selection for inline trade detail expansion."""
         if event.row_key in self._detail_row_keys:
             return
 
-        if self._expansion_active:
+        if self._expanded_trade:
             for dk in self._detail_row_keys:
                 self.trades_table.remove_row(dk)
             self._detail_row_keys.clear()
             if event.row_key not in self._trade_row_map:
                 self._expanded_trade = None
-                self._expansion_active = False
                 return
             if self._trade_row_map.get(event.row_key) is self._expanded_trade:
                 # Toggle off — same row clicked again
                 self._expanded_trade = None
-                self._expansion_active = False
                 return
             # Different row selected — fall through to expand it
 
@@ -494,11 +472,9 @@ class BTCBeeperApp(App):
             return
 
         self._expanded_trade = trade
-        self._expansion_active = True
         self._rebuild_table_with_detail()
 
     def _rebuild_table_with_detail(self) -> None:
-        """Rebuild trades table with detail rows spliced after the expanded trade."""
         min_size = self.get_min_trade_size()
         filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
         trades = filtered[-TRADES_TABLE_SIZE:]

@@ -1,7 +1,4 @@
-"""Click sound generator for BTCBeeper."""
-
 from pathlib import Path
-from typing import TypedDict
 
 import numpy as np
 from scipy.io import wavfile
@@ -9,18 +6,7 @@ from scipy.io import wavfile
 SAMPLE_RATE = 44100
 RANDOM_SEED = 42
 
-
-class ClickParams(TypedDict):
-    filename: str
-    duration: float
-    frequency: float
-    sine_amp: float
-    noise_amp: float
-    decay: float
-    double: bool
-
-
-CLICK_VARIATIONS: list[ClickParams] = [
+CLICK_VARIATIONS = [
     {"filename": "geiger_click1.wav", "duration": 0.002, "frequency": 1000, "sine_amp": 0.2, "noise_amp": 0.3, "decay": 16, "double": False},
     {"filename": "geiger_click2.wav", "duration": 0.004, "frequency": 3000, "sine_amp": 0.4, "noise_amp": 0.2, "decay": 12, "double": False},
     {"filename": "geiger_click3.wav", "duration": 0.003, "frequency": 0, "sine_amp": 0.0, "noise_amp": 0.5, "decay": 10, "double": False},
@@ -33,8 +19,7 @@ CLICK_VARIATIONS: list[ClickParams] = [
     {"filename": "geiger_click10.wav", "duration": 0.004, "frequency": 3500, "sine_amp": 0.2, "noise_amp": 0.4, "decay": 10, "double": True},
 ]
 
-def generate_click_sound(params: ClickParams, sample_rate: int = SAMPLE_RATE) -> np.ndarray:
-    """Generate a single click sound based on parameters."""
+def generate_click_sound(params, sample_rate=SAMPLE_RATE):
     t = np.linspace(0, params["duration"], int(sample_rate * params["duration"]), False)
 
     sine_wave = params["sine_amp"] * np.sin(2 * np.pi * params["frequency"] * t) if params["frequency"] > 0 else np.zeros_like(t)
@@ -54,8 +39,7 @@ def generate_click_sound(params: ClickParams, sample_rate: int = SAMPLE_RATE) ->
     return click
 
 
-def main() -> None:
-    """Generate all click sound variations and save to disk."""
+def main():
     np.random.seed(RANDOM_SEED)
 
     sounds_dir = Path(__file__).parent.parent / "data" / "sounds"

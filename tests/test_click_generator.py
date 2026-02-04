@@ -214,24 +214,6 @@ class TestClickVariations:
             assert params["decay"] > 0
 
 
-class TestClickParamsTypedDict:
-    def test_typed_dict_keys(self):
-        from click_generator import ClickParams
-        expected_keys = {"filename", "duration", "frequency", "sine_amp", "noise_amp", "decay", "double"}
-        assert set(ClickParams.__annotations__.keys()) == expected_keys
-
-    def test_typed_dict_types(self):
-        from click_generator import ClickParams
-        annotations = ClickParams.__annotations__
-        assert annotations["filename"] == str
-        assert annotations["duration"] == float
-        assert annotations["frequency"] == float
-        assert annotations["sine_amp"] == float
-        assert annotations["noise_amp"] == float
-        assert annotations["decay"] == float
-        assert annotations["double"] == bool
-
-
 class TestConstants:
     def test_sample_rate_standard(self):
         from click_generator import SAMPLE_RATE
