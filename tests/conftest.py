@@ -27,6 +27,7 @@ def btc_app(mock_pygame):
     app.stats_widget = MagicMock()
     app.trades_table = MagicMock()
     app.bot_banner = MagicMock()
+    app.heatmap_widget = MagicMock()
     # Mock set_timer to avoid requiring an event loop
     app.set_timer = MagicMock(return_value=MagicMock())
     return app
