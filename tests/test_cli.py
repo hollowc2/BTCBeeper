@@ -84,7 +84,7 @@ class TestHandleTrade:
 
         assert btc_app.stats["total_trades"] == 1
         assert btc_app.stats["last_price"] == 50000.0
-        assert btc_app.stats["volume_today"] == 0.5
+        assert btc_app.stats["session_volume"] == 0.5
         assert btc_app.stats["avg_trade_size"] == 0.5
         assert btc_app.stats["largest_trade"]["size"] == 0.5
 
@@ -98,7 +98,7 @@ class TestHandleTrade:
             btc_app._handle_trade(t)
 
         assert btc_app.stats["total_trades"] == 3
-        assert btc_app.stats["volume_today"] == pytest.approx(1.5, rel=1e-6)
+        assert btc_app.stats["session_volume"] == pytest.approx(1.5, rel=1e-6)
         assert btc_app.stats["avg_trade_size"] == pytest.approx(0.5, rel=1e-6)
         assert btc_app.stats["largest_trade"]["size"] == 0.7
         assert btc_app.stats["last_price"] == 50050.0
@@ -109,7 +109,7 @@ class TestHandleTrade:
         btc_app._handle_trade(trade_data)
 
         assert btc_app.stats["total_trades"] == 0
-        assert btc_app.stats["volume_today"] == 0.0
+        assert btc_app.stats["session_volume"] == 0.0
 
     def test_trade_at_filter_boundary_included(self, btc_app):
         btc_app.filter_index = 2  # 0.01 BTC min
@@ -417,7 +417,7 @@ class TestRefreshStats:
         btc_app.stats = {
             "total_trades": 100,
             "last_price": 50000.0,
-            "volume_today": 50.5,
+            "session_volume": 50.5,
             "avg_trade_size": 0.505,
             "largest_trade": {"side": "buy", "size": 5.0, "price": 49000.0},
             "tps": 2.5,
@@ -427,7 +427,7 @@ class TestRefreshStats:
 
         call_args = btc_app.stats_widget.update.call_args[0][0]
         assert "Total Trades: 100" in call_args
-        assert "Volume Today: 50.500000 BTC" in call_args
+        assert "Session Volume: 50.500000 BTC" in call_args
         assert "Trades/sec (TPS): 2.50" in call_args
         assert "Highest TPS: 5.00" in call_args
         assert "Avg Trade Size: 0.505000 BTC" in call_args
@@ -539,7 +539,7 @@ class TestEdgeCasesAndBoundary:
     def test_very_large_trade_size(self, btc_app):
         trade_data = {"price": "50000.00", "size": "1000.0", "side": "buy"}
         btc_app._handle_trade(trade_data)
-        assert btc_app.stats["volume_today"] == 1000.0
+        assert btc_app.stats["session_volume"] == 1000.0
         assert btc_app.stats["largest_trade"]["size"] == 1000.0
 
     def test_floating_point_precision(self, btc_app):
@@ -550,7 +550,7 @@ class TestEdgeCasesAndBoundary:
         ]
         for t in trades:
             btc_app._handle_trade(t)
-        assert btc_app.stats["volume_today"] == pytest.approx(0.6, rel=1e-9)
+        assert btc_app.stats["session_volume"] == pytest.approx(0.6, rel=1e-9)
 
     def test_rapid_filter_changes(self, btc_app):
         for _ in range(100):
@@ -682,7 +682,7 @@ class TestOutputVerification:
         btc_app.stats = {
             "total_trades": 42,
             "last_price": 65432.10,
-            "volume_today": 123.456789,
+            "session_volume": 123.456789,
             "avg_trade_size": 2.939447,
             "largest_trade": {"side": "sell", "size": 10.5, "price": 65000.0},
             "tps": 3.5,
@@ -695,7 +695,7 @@ class TestOutputVerification:
 
         call_args = btc_app.stats_widget.update.call_args[0][0]
         assert "Total Trades: 42" in call_args
-        assert "Volume Today: 123.456789 BTC" in call_args
+        assert "Session Volume: 123.456789 BTC" in call_args
         assert "Trades/sec (TPS): 3.50" in call_args
         assert "Highest TPS: 7.20" in call_args
         assert "Avg Trade Size: 2.939447 BTC" in call_args
@@ -787,7 +787,7 @@ class TestIntegration:
 
             assert btc_app.stats["total_trades"] == 1
             assert btc_app.stats["last_price"] == 50000.0
-            assert btc_app.stats["volume_today"] == 0.5
+            assert btc_app.stats["session_volume"] == 0.5
             assert len(btc_app.recent_trades) == 1
             assert len(btc_app.trade_timestamps) == 1
             btc_app.price_widget.update_price.assert_called()
@@ -805,7 +805,7 @@ class TestIntegration:
                 btc_app._process_message(message)
 
             assert btc_app.stats["total_trades"] == 10
-            assert btc_app.stats["volume_today"] == pytest.approx(1.0, rel=1e-6)
+            assert btc_app.stats["session_volume"] == pytest.approx(1.0, rel=1e-6)
             assert btc_app.stats["last_price"] == 50090.0
 
     def test_mixed_message_types(self, btc_app):
@@ -834,7 +834,7 @@ class TestIntegration:
                 btc_app._handle_trade(trade_data)
 
             assert btc_app.stats["total_trades"] == 500
-            assert btc_app.stats["volume_today"] == pytest.approx(5.0, rel=1e-6)
+            assert btc_app.stats["session_volume"] == pytest.approx(5.0, rel=1e-6)
             from cli import MAX_RECENT_TRADES
             assert len(btc_app.recent_trades) == min(500, MAX_RECENT_TRADES)
 

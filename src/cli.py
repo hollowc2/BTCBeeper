@@ -159,7 +159,7 @@ class BTCBeeperApp(App):
         self.stats = {
             "total_trades": 0,
             "last_price": 0.0,
-            "volume_today": 0.0,
+            "session_volume": 0.0,
             "avg_trade_size": 0.0,
             "largest_trade": None,
             "tps": 0.0,
@@ -279,7 +279,7 @@ class BTCBeeperApp(App):
         prev_price = self.stats["last_price"]
         self.stats["total_trades"] += 1
         self.stats["last_price"] = trade["price"]
-        self.stats["volume_today"] += trade["size"]
+        self.stats["session_volume"] += trade["size"]
 
         self.recent_trades.append(trade)
         if len(self.recent_trades) > MAX_RECENT_TRADES:
@@ -287,7 +287,7 @@ class BTCBeeperApp(App):
 
         self.trade_timestamps.append(time.time())
         self._update_tps()
-        self.stats["avg_trade_size"] = self.stats["volume_today"] / self.stats["total_trades"]
+        self.stats["avg_trade_size"] = self.stats["session_volume"] / self.stats["total_trades"]
 
         largest = self.stats["largest_trade"]
         if not largest or trade["size"] > largest["size"]:
@@ -354,8 +354,8 @@ class BTCBeeperApp(App):
             f"Uptime:           {uptime}",
             f"Session High:     ${session_high:,.2f}",
             f"Session Low:      ${session_low:,.2f}" if session_low != float("inf") else "Session Low:      N/A",
+            f"Session Volume: {s['session_volume']:.6f} BTC (${volume_usd:,.2f} USD)",
             f"Total Trades: {s['total_trades']}",
-            f"Volume Today: {s['volume_today']:.6f} BTC (${volume_usd:,.2f} USD)",
             f"Trades/sec (TPS): {s['tps']:.2f}",
             f"Highest TPS: {s['highest_tps']:.2f}",
             f"Avg Trade Size: {s['avg_trade_size']:.6f} BTC",
