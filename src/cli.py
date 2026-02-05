@@ -25,7 +25,7 @@ COINBASE_WS_URL = os.getenv("COINBASE_WS_URL", "wss://ws-feed.exchange.coinbase.
 TPS_WINDOW = 10
 MAX_RECENT_TRADES = 1000
 MAX_RECONNECT_ATTEMPTS = 5
-RECONNECT_DELAY = 5
+RECONNECT_DELAY = 2
 BOT_DETECTION_THRESHOLD = 5
 BOT_BANNER_DURATION = 5
 TRADES_TABLE_SIZE = 16
@@ -176,6 +176,7 @@ class BTCBeeperApp(App):
         self._expanded_trade: dict | None = None
         self._detail_row_keys: list = []
         self._trade_row_map: dict = {}
+        self._last_msg_time: float = 0.0
 
     def compose(self) -> ComposeResult:
         self.price_widget = PriceWidget(id="price")
@@ -205,11 +206,16 @@ class BTCBeeperApp(App):
 
         while reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
             try:
-                async with websockets.connect(COINBASE_WS_URL) as ws:
+                async with websockets.connect(COINBASE_WS_URL, ping_interval=10, ping_timeout=5) as ws:
                     await ws.send(subscribe_msg)
                     reconnect_attempts = 0
+                    self._last_msg_time = time.time()
                     logger.info("Connected to %s", COINBASE_WS_URL)
                     async for message in ws:
+                        now = time.time()
+                        if self._last_msg_time and now - self._last_msg_time > 2:
+                            logger.info("Message gap of %.1fs", now - self._last_msg_time)
+                        self._last_msg_time = now
                         self._process_message(message)
             except (websockets.exceptions.WebSocketException, ConnectionError, OSError) as e:
                 reconnect_attempts += 1
@@ -240,7 +246,6 @@ class BTCBeeperApp(App):
             price = float(data.get("price", 0))
             if price > 0:
                 self.stats["last_price"] = price
-                self.refresh_stats()
         elif msg_type == "error":
             self.stats_widget.update(f"[Error]: {data.get('message', 'Unknown error')}")
 
@@ -302,8 +307,7 @@ class BTCBeeperApp(App):
                 elif trade["price"] < prev_price:
                     self.price_widget.animate("down")
 
-        # Repaint unconditionally so the heatmap updates on every trade
-        self.refresh_stats()
+        self.price_widget.update_price(self.stats["last_price"])
 
     def _update_tps(self) -> None:
         now = time.time()
@@ -375,12 +379,21 @@ class BTCBeeperApp(App):
                 f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/]"
             )
 
+        msg_age = time.time() - self._last_msg_time if self._last_msg_time else None
+        if msg_age is None:
+            conn_status = "[dim]--[/]"
+        elif msg_age < 2:
+            conn_status = "[bright_green]live[/]"
+        else:
+            conn_status = f"[bright_yellow]{msg_age:.0f}s ago[/]"
+
         lines.extend([
             "",
             "[dim]─── ACTIVITY ───────[/]",
             f"[dim]TPS     [/] {s['tps']:.2f}  [dim]peak[/] {s['highest_tps']:.2f}",
             f"[dim]Filter  [/] ≥ {min_size} BTC",
             "[dim]Audio   [/] " + ("[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"),
+            f"[dim]Feed    [/] {conn_status}",
         ])
 
         errors_p = s.get("parse_errors", 0)
