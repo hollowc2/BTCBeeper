@@ -258,9 +258,6 @@ class BTCBeeperApp(App):
             logger.debug("Invalid trade: %s", e)
             return
 
-        if trade_size < self.get_min_trade_size():
-            return
-
         trade = {
             "price": trade_price,
             "size": trade_size,
@@ -271,37 +268,41 @@ class BTCBeeperApp(App):
             "time": data.get("time", ""),
         }
 
-        prev_price = self.stats["last_price"]
-        self.stats["total_trades"] += 1
-        self.stats["last_price"] = trade["price"]
-        self.stats["session_volume"] += trade["size"]
-
+        # All trades feed the heatmap via recent_trades
         self.recent_trades.append(trade)
         if len(self.recent_trades) > MAX_RECENT_TRADES:
             self.recent_trades.pop(0)
 
-        self.trade_timestamps.append(time.time())
-        self._update_tps()
-        self.stats["avg_trade_size"] = self.stats["session_volume"] / self.stats["total_trades"]
+        # Stats, audio, and price animation are gated by the size filter
+        if trade_size >= self.get_min_trade_size():
+            prev_price = self.stats["last_price"]
+            self.stats["total_trades"] += 1
+            self.stats["last_price"] = trade["price"]
+            self.stats["session_volume"] += trade["size"]
 
-        largest = self.stats["largest_trade"]
-        if not largest or trade["size"] > largest["size"]:
-            self.stats["largest_trade"] = trade.copy()
+            self.trade_timestamps.append(time.time())
+            self._update_tps()
+            self.stats["avg_trade_size"] = self.stats["session_volume"] / self.stats["total_trades"]
 
-        if trade_price > self.stats["session_high"]:
-            self.stats["session_high"] = trade_price
-        if trade_price < self.stats["session_low"]:
-            self.stats["session_low"] = trade_price
-        self.stats["volume_usd"] += trade_size * trade_price
+            largest = self.stats["largest_trade"]
+            if not largest or trade["size"] > largest["size"]:
+                self.stats["largest_trade"] = trade.copy()
 
-        self._play_click(trade["side"])
+            if trade_price > self.stats["session_high"]:
+                self.stats["session_high"] = trade_price
+            if trade_price < self.stats["session_low"]:
+                self.stats["session_low"] = trade_price
+            self.stats["volume_usd"] += trade_size * trade_price
 
-        if prev_price:
-            if trade["price"] > prev_price:
-                self.price_widget.animate("up")
-            elif trade["price"] < prev_price:
-                self.price_widget.animate("down")
+            self._play_click(trade["side"])
 
+            if prev_price:
+                if trade["price"] > prev_price:
+                    self.price_widget.animate("up")
+                elif trade["price"] < prev_price:
+                    self.price_widget.animate("down")
+
+        # Repaint unconditionally so the heatmap updates on every trade
         self.refresh_stats()
 
     def _update_tps(self) -> None:
