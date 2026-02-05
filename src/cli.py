@@ -12,7 +12,7 @@ from textual.timer import Timer
 from textual.widgets import DataTable, Static
 
 logging.basicConfig(
-    filename="btcbeeper.log",
+    filename=os.getenv("BTCBEEPER_LOG_PATH", "btcbeeper.log"),
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
 )
