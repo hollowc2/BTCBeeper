@@ -7,14 +7,14 @@ StatusHeader {
     background: $surface;
     padding: 0 1;
     content-align: left middle;
-    border-bottom: solid $surface;
+    border-bottom: solid #2d4f6e;
 }
 
 #price {
     height: 3;
     content-align: center middle;
     text-align: center;
-    border-bottom: solid $surface;
+    border-bottom: solid #2d4f6e;
 }
 
 .price-up {
@@ -29,29 +29,32 @@ StatusHeader {
 
 #main-row {
     height: 1fr;
-    border-bottom: solid $surface;
+    border-bottom: solid #2d4f6e;
 }
 
 #left-panel {
     width: 30;
-    border-right: solid $surface;
+    border-right: solid #2d4f6e;
     overflow-y: auto;
 }
 
 SessionWidget {
-    border: round $surface;
+    border: round #3a7bd5;
+    border-title-color: #7aa2f7;
     padding: 0 1;
     height: auto;
 }
 
 TradeStatsWidget {
-    border: round $surface;
+    border: round #3a7bd5;
+    border-title-color: #7aa2f7;
     padding: 0 1;
     height: auto;
 }
 
 ActivityWidget {
-    border: round $surface;
+    border: round #3a7bd5;
+    border-title-color: #7aa2f7;
     padding: 0 1;
     height: auto;
 }
@@ -68,7 +71,7 @@ ActivityWidget {
 #heatmap {
     height: 8;
     padding: 1;
-    border-bottom: solid $surface;
+    border-bottom: solid #2d4f6e;
 }
 
 #bot-banner {
