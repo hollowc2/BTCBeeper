@@ -184,6 +184,18 @@ class TestHandleTrade:
         btc_app._handle_trade(trade_data)
         assert btc_app.stats["total_trades"] == 0
 
+    def test_buy_sell_volumes_tracked_separately(self, btc_app):
+        btc_app._handle_trade({"price": "50000.00", "size": "0.5", "side": "buy"})
+        btc_app._handle_trade({"price": "50100.00", "size": "0.3", "side": "sell"})
+        btc_app._handle_trade({"price": "50050.00", "size": "0.2", "side": "buy"})
+        assert btc_app.stats["buy_volume"] == pytest.approx(0.7, rel=1e-6)
+        assert btc_app.stats["sell_volume"] == pytest.approx(0.3, rel=1e-6)
+
+    def test_non_buy_side_goes_to_sell_volume(self, btc_app):
+        btc_app._handle_trade({"price": "50000.00", "size": "1.0", "side": "unknown"})
+        assert btc_app.stats["buy_volume"] == 0.0
+        assert btc_app.stats["sell_volume"] == pytest.approx(1.0, rel=1e-6)
+
     def test_click_played_on_trade(self, btc_app):
         with patch.object(btc_app, '_play_click') as mock_click:
             btc_app._handle_trade({"price": "50000.00", "size": "0.5", "side": "buy"})
@@ -436,6 +448,7 @@ class TestRefreshStats:
         args = btc_app.activity_widget.update_activity.call_args[0]
         assert args[1] == 0.001
         assert args[2] is False
+        assert isinstance(args[3], list)
 
     def test_refresh_filters_trades_table(self, btc_app):
         btc_app.filter_index = 2  # 0.01 BTC
@@ -723,6 +736,7 @@ class TestOutputVerification:
         assert args[2] is False
         assert args[0]["tps"] == 3.5
         assert args[0]["highest_tps"] == 7.2
+        assert isinstance(args[3], list)
 
     def test_status_header_audio_status_updated(self, btc_app):
         btc_app.audio_enabled = False

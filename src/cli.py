@@ -91,6 +91,14 @@ class SessionWidget(Static):
             f"[dim]High  [/] [bright_yellow]${session_high:,.2f}[/]",
             low_line,
         ]
+        if session_high > 0 and session_low != float("inf"):
+            lines.append(f"[dim]Range [/] [bright_white]${session_high - session_low:,.2f}[/]")
+        volume_usd = stats.get("volume_usd", 0.0)
+        session_volume = stats.get("session_volume", 0.0)
+        if session_volume > 0:
+            vwap = volume_usd / session_volume
+            vwap_color = "bright_green" if stats.get("last_price", 0) >= vwap else "bright_red"
+            lines.append(f"[dim]VWAP  [/] [{vwap_color}]${vwap:,.2f}[/]")
         self.update("\n".join(lines))
 
 
@@ -102,7 +110,8 @@ class TradeStatsWidget(Static):
         volume_usd = stats.get("volume_usd", 0.0)
         lines = [
             f"[dim]Count [/] [bright_white]{stats['total_trades']}[/] trades",
-            f"[dim]Volume[/] [bright_cyan]{_fmt_btc(stats['session_volume'])} BTC[/]",
+            f"[dim]Buy   [/] [bright_green]{_fmt_btc(stats.get('buy_volume', 0.0))} BTC[/]",
+            f"[dim]Sell  [/] [bright_red]{_fmt_btc(stats.get('sell_volume', 0.0))} BTC[/]",
             f"[dim]USD   [/] [bright_yellow]${volume_usd:,.2f}[/]",
             f"[dim]Avg   [/] [bright_cyan]{_fmt_btc(stats['avg_trade_size'])} BTC[/]",
         ]
@@ -120,11 +129,17 @@ class ActivityWidget(Static):
     def on_mount(self) -> None:
         self.border_title = "ACTIVITY"
 
-    def update_activity(self, stats: dict, min_size: float, audio_enabled: bool) -> None:
+    def update_activity(self, stats: dict, min_size: float, audio_enabled: bool, recent_filtered: list[dict] | None = None) -> None:
         lines = [
             f"[dim]TPS   [/] {stats['tps']:.2f}  [dim]peak[/] {stats['highest_tps']:.2f}",
             f"[dim]Filter[/] \u2265 {min_size} BTC",
         ]
+        if recent_filtered:
+            buy_count = sum(1 for t in recent_filtered if t["side"] == "buy")
+            pct = buy_count / len(recent_filtered) * 100
+            flow_color = "bright_green" if pct >= 50 else "bright_red"
+            flow_label = "buy" if pct >= 50 else "sell"
+            lines.append(f"[dim]Flow  [/] [{flow_color}]{pct:.0f}% {flow_label}[/]")
         errors_p = stats.get("parse_errors", 0)
         errors_i = stats.get("invalid_trades", 0)
         if errors_p or errors_i:
@@ -212,6 +227,8 @@ class BTCBeeperApp(App):
             "session_high": 0.0,
             "session_low": float("inf"),
             "volume_usd": 0.0,
+            "buy_volume": 0.0,
+            "sell_volume": 0.0,
         }
         self.recent_trades: list[dict] = []
         self.trade_timestamps: list[float] = []
@@ -349,6 +366,10 @@ class BTCBeeperApp(App):
             if trade_price < self.stats["session_low"]:
                 self.stats["session_low"] = trade_price
             self.stats["volume_usd"] += trade_size * trade_price
+            if trade["side"] == "buy":
+                self.stats["buy_volume"] += trade_size
+            else:
+                self.stats["sell_volume"] += trade_size
 
             self._play_click(trade["side"])
 
@@ -398,9 +419,10 @@ class BTCBeeperApp(App):
         self.price_widget.update_price(s["last_price"])
 
         elapsed = int(time.time() - s.get("session_start", time.time()))
+        filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
         self.session_widget.update_session(s, elapsed)
         self.trade_stats_widget.update_trade_stats(s)
-        self.activity_widget.update_activity(s, min_size, self.audio_enabled)
+        self.activity_widget.update_activity(s, min_size, self.audio_enabled, filtered[-TRADES_TABLE_SIZE:])
 
         msg_age = time.time() - self._last_msg_time if self._last_msg_time else None
         if msg_age is None:
@@ -413,7 +435,6 @@ class BTCBeeperApp(App):
         self.status_header.feed_status = conn_status
         self.status_header.audio_status = "[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"
 
-        filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
         self._update_trades_table(filtered[-TRADES_TABLE_SIZE:])
         self._check_bot_activity(filtered[-TRADES_TABLE_SIZE:])
         self.heatmap_widget.update_heatmap(self._compute_heatmap_buckets())
