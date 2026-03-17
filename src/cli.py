@@ -7,6 +7,7 @@ import time
 import pygame
 import websockets
 from textual.app import App, ComposeResult
+from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
 from textual.widgets import DataTable, Footer, Static
@@ -186,10 +187,10 @@ class BTCBeeperApp(App):
     CSS_PATH = "btcbeeper.tcss"
     FILTER_SIZES = [0.0001, 0.001, 0.01, 0.1, 1]
     BINDINGS = [
-        ("q",  "quit",         "Quit"),
-        ("a",  "toggle_audio", "Audio on/off"),
-        ("[",  "filter_down",  "Filter \u2190"),
-        ("]",  "filter_up",    "Filter \u2192"),
+        Binding("q", "quit",         "Quit"),
+        Binding("a", "toggle_audio", "Audio on/off"),
+        Binding("[", "filter_down",  "Filter \u2190", priority=True),
+        Binding("]", "filter_up",    "Filter \u2192", priority=True),
     ]
 
     def __init__(self, *args, **kwargs):
