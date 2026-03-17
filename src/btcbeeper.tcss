@@ -1,0 +1,86 @@
+BTCBeeperApp {
+    background: #1e1e2e;
+}
+
+StatusHeader {
+    height: 1;
+    background: $surface;
+    padding: 0 1;
+    content-align: left middle;
+    border-bottom: solid $surface;
+}
+
+#price {
+    height: 3;
+    content-align: center middle;
+    text-align: center;
+    border-bottom: solid $surface;
+}
+
+.price-up {
+    color: #00e676;
+    transition: color 200ms;
+}
+
+.price-down {
+    color: #ff5252;
+    transition: color 200ms;
+}
+
+#main-row {
+    height: 1fr;
+    border-bottom: solid $surface;
+}
+
+#left-panel {
+    width: 30;
+    border-right: solid $surface;
+    overflow-y: auto;
+}
+
+SessionWidget {
+    border: round $surface;
+    padding: 0 1;
+    height: auto;
+}
+
+TradeStatsWidget {
+    border: round $surface;
+    padding: 0 1;
+    height: auto;
+}
+
+ActivityWidget {
+    border: round $surface;
+    padding: 0 1;
+    height: auto;
+}
+
+#right-panel {
+    width: 1fr;
+    padding: 0 1;
+}
+
+#trades-table {
+    height: 1fr;
+}
+
+#heatmap {
+    height: 8;
+    padding: 1;
+    border-bottom: solid $surface;
+}
+
+#bot-banner {
+    dock: bottom;
+    height: 2;
+    text-align: center;
+    content-align: center middle;
+    visibility: hidden;
+}
+
+#bot-banner.active {
+    visibility: visible;
+    background: #e65100;
+    color: white;
+}

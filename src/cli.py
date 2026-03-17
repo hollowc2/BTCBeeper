@@ -7,9 +7,9 @@ import time
 import pygame
 import websockets
 from textual.app import App, ComposeResult
-from textual.containers import Horizontal
+from textual.containers import Horizontal, Vertical
 from textual.timer import Timer
-from textual.widgets import DataTable, Static
+from textual.widgets import DataTable, Footer, Static
 
 logging.basicConfig(
     filename=os.getenv("BTCBEEPER_LOG_PATH", "btcbeeper.log"),
@@ -35,13 +35,113 @@ ANIMATION_DURATION = 0.5
 click_sound = None
 click_sound_sell = None
 
+
+class StatusHeader(Static):
+    def __init__(self, *args, **kwargs):
+        super().__init__("", *args, **kwargs)
+        self._feed_status = "--"
+        self._audio_status = "ON"
+
+    @property
+    def feed_status(self) -> str:
+        return self._feed_status
+
+    @feed_status.setter
+    def feed_status(self, value: str) -> None:
+        self._feed_status = value
+        self._refresh_display()
+
+    @property
+    def audio_status(self) -> str:
+        return self._audio_status
+
+    @audio_status.setter
+    def audio_status(self, value: str) -> None:
+        self._audio_status = value
+        self._refresh_display()
+
+    def on_mount(self) -> None:
+        self._refresh_display()
+
+    def _refresh_display(self) -> None:
+        self.update(
+            f"[bold bright_cyan]\u20bf BTCBeeper[/]"
+            f"  [dim]Feed:[/] {self._feed_status}"
+            f"  [dim]Audio:[/] {self._audio_status}"
+            f"  [dim]BTC-USD[/]"
+        )
+
+
+class SessionWidget(Static):
+    def on_mount(self) -> None:
+        self.border_title = "SESSION"
+
+    def update_session(self, stats: dict, elapsed_secs: int) -> None:
+        uptime = f"{elapsed_secs // 3600:02d}:{(elapsed_secs % 3600) // 60:02d}:{elapsed_secs % 60:02d}"
+        session_high = stats.get("session_high", 0.0)
+        session_low = stats.get("session_low", float("inf"))
+        low_line = (
+            f"[dim]Low   [/] [bright_yellow]${session_low:,.2f}[/]"
+            if session_low != float("inf")
+            else "[dim]Low   [/] [dim]N/A[/]"
+        )
+        lines = [
+            f"[dim]Uptime[/] {uptime}",
+            f"[dim]High  [/] [bright_yellow]${session_high:,.2f}[/]",
+            low_line,
+        ]
+        self.update("\n".join(lines))
+
+
+class TradeStatsWidget(Static):
+    def on_mount(self) -> None:
+        self.border_title = "TRADES"
+
+    def update_trade_stats(self, stats: dict) -> None:
+        volume_usd = stats.get("volume_usd", 0.0)
+        lines = [
+            f"[dim]Count [/] [bright_white]{stats['total_trades']}[/] trades",
+            f"[dim]Volume[/] [bright_cyan]{_fmt_btc(stats['session_volume'])} BTC[/]",
+            f"[dim]USD   [/] [bright_yellow]${volume_usd:,.2f}[/]",
+            f"[dim]Avg   [/] [bright_cyan]{_fmt_btc(stats['avg_trade_size'])} BTC[/]",
+        ]
+        if stats["largest_trade"]:
+            lt = stats["largest_trade"]
+            side_color = "bright_green" if lt["side"] == "buy" else "bright_red"
+            lines.append(
+                f"[dim]Largest[/] [{side_color}]{lt['side'].capitalize()}[/] "
+                f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/]"
+            )
+        self.update("\n".join(lines))
+
+
+class ActivityWidget(Static):
+    def on_mount(self) -> None:
+        self.border_title = "ACTIVITY"
+
+    def update_activity(self, stats: dict, min_size: float, audio_enabled: bool) -> None:
+        lines = [
+            f"[dim]TPS   [/] {stats['tps']:.2f}  [dim]peak[/] {stats['highest_tps']:.2f}",
+            f"[dim]Filter[/] \u2265 {min_size} BTC",
+        ]
+        errors_p = stats.get("parse_errors", 0)
+        errors_i = stats.get("invalid_trades", 0)
+        if errors_p or errors_i:
+            lines.append(f"[dim]Errors[/] [bright_red]{errors_p} parse  {errors_i} invalid[/]")
+        self.update("\n".join(lines))
+
+
+class BotBanner(Static):
+    pass
+
+
 class PriceWidget(Static):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.anim_timer: Timer | None = None
 
     def update_price(self, price: float) -> None:
-        self.update(f"\n[bold bright_white on black]BTC/USD[/]\n\n[bold bright_yellow on black]${price:,.2f}[/]")
+        self.update(f"\n[bold bright_yellow on black]${price:,.2f}[/]")
 
     def animate(self, direction: str) -> None:
         self.add_class(f"price-{direction}")
@@ -83,72 +183,13 @@ def _fmt_btc(value: float) -> str:
 
 
 class BTCBeeperApp(App):
-    CSS = """
-    BTCBeeperApp {
-        background: #1e1e2e;
-    }
-
-    #price {
-        height: 5;
-        content-align: center middle;
-        text-align: center;
-        border-bottom: solid $surface;
-    }
-
-    .price-up {
-        color: #00e676;
-        transition: color 200ms;
-    }
-
-    .price-down {
-        color: #ff5252;
-        transition: color 200ms;
-    }
-
-    #middle-row {
-        height: 1fr;
-        border-bottom: solid $surface;
-    }
-
-    #stats {
-        width: 1fr;
-        height: 1fr;
-        padding: 1;
-        border-right: solid $surface;
-    }
-
-    #trades {
-        width: 1fr;
-        height: 1fr;
-        padding: 0 1;
-    }
-
-    #heatmap {
-        height: 8;
-        padding: 1;
-        border-bottom: solid $surface;
-    }
-
-    #bot-banner {
-        dock: bottom;
-        height: 2;
-        text-align: center;
-        content-align: center middle;
-        visibility: hidden;
-    }
-
-    #bot-banner.active {
-        visibility: visible;
-        background: #e65100;
-        color: white;
-    }
-    """
+    CSS_PATH = "btcbeeper.tcss"
     FILTER_SIZES = [0.0001, 0.001, 0.01, 0.1, 1]
     BINDINGS = [
-        ("q", "quit", "Quit"),
-        ("a", "toggle_audio", "Toggle Audio"),
-        ("[", "filter_down", "Decrease Min Trade Size"),
-        ("]", "filter_up", "Increase Min Trade Size"),
+        ("q",  "quit",         "Quit"),
+        ("a",  "toggle_audio", "Audio on/off"),
+        ("[",  "filter_down",  "Filter \u2190"),
+        ("]",  "filter_up",    "Filter \u2192"),
     ]
 
     def __init__(self, *args, **kwargs):
@@ -179,18 +220,27 @@ class BTCBeeperApp(App):
         self._last_msg_time: float = 0.0
 
     def compose(self) -> ComposeResult:
+        self.status_header = StatusHeader(id="status-header")
+        yield self.status_header
         self.price_widget = PriceWidget(id="price")
         yield self.price_widget
-        with Horizontal(id="middle-row"):
-            self.stats_widget = Static(id="stats")
-            yield self.stats_widget
-            self.trades_table = DataTable(id="trades", cursor_type="row")
-            self.trades_table.add_columns("Side", "Price", "Size (BTC)")
-            yield self.trades_table
+        with Horizontal(id="main-row"):
+            with Vertical(id="left-panel"):
+                self.session_widget = SessionWidget()
+                yield self.session_widget
+                self.trade_stats_widget = TradeStatsWidget()
+                yield self.trade_stats_widget
+                self.activity_widget = ActivityWidget()
+                yield self.activity_widget
+            with Vertical(id="right-panel"):
+                self.trades_table = DataTable(id="trades-table", cursor_type="row")
+                self.trades_table.add_columns("Side", "Price", "Size (BTC)")
+                yield self.trades_table
         self.heatmap_widget = HeatmapWidget(id="heatmap")
         yield self.heatmap_widget
-        self.bot_banner = Static("", id="bot-banner")
+        self.bot_banner = BotBanner("", id="bot-banner")
         yield self.bot_banner
+        yield Footer()
 
     async def on_mount(self) -> None:
         self.set_interval(STATS_REFRESH_INTERVAL, self.refresh_stats)
@@ -220,12 +270,12 @@ class BTCBeeperApp(App):
             except (websockets.exceptions.WebSocketException, ConnectionError, OSError) as e:
                 reconnect_attempts += 1
                 logger.warning("Connection error: %s (attempt %d/%d)", e, reconnect_attempts, MAX_RECONNECT_ATTEMPTS)
-                self.stats_widget.update(f"[Connection Error]: {e}. Reconnecting... ({reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS})")
+                self.status_header.feed_status = f"[bright_red]ERR {reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS}[/]"
                 if reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
                     await asyncio.sleep(RECONNECT_DELAY)
                 else:
                     logger.error("Max reconnection attempts reached, giving up")
-                    self.stats_widget.update("[Connection Failed]: Max reconnection attempts reached.")
+                    self.status_header.feed_status = "[bright_red]DISCONNECTED[/]"
 
     def _process_message(self, message: str) -> None:
         try:
@@ -247,7 +297,7 @@ class BTCBeeperApp(App):
             if price > 0:
                 self.stats["last_price"] = price
         elif msg_type == "error":
-            self.stats_widget.update(f"[Error]: {data.get('message', 'Unknown error')}")
+            self.status_header.feed_status = f"[Error]: {data.get('message', 'Unknown error')}"
 
     def _handle_trade(self, data: dict) -> None:
         if "price" not in data or "size" not in data:
@@ -347,37 +397,9 @@ class BTCBeeperApp(App):
         self.price_widget.update_price(s["last_price"])
 
         elapsed = int(time.time() - s.get("session_start", time.time()))
-        uptime = f"{elapsed // 3600:02d}:{(elapsed % 3600) // 60:02d}:{elapsed % 60:02d}"
-        session_high = s.get("session_high", 0.0)
-        session_low = s.get("session_low", 0.0)
-        volume_usd = s.get("volume_usd", 0.0)
-
-        low_line = (
-            f"[dim]Low     [/] [bright_yellow]${session_low:,.2f}[/]"
-            if session_low != float("inf")
-            else "[dim]Low     [/] [dim]N/A[/]"
-        )
-
-        lines = [
-            "[dim]─── SESSION ────────[/]",
-            f"[dim]Uptime  [/] {uptime}",
-            f"[dim]High    [/] [bright_yellow]${session_high:,.2f}[/]",
-            low_line,
-            "",
-            "[dim]─── TRADES ─────────[/]",
-            f"[dim]Total   [/] [bright_white]{s['total_trades']}[/] trades",
-            f"[dim]Volume  [/] [bright_cyan]{_fmt_btc(s['session_volume'])} BTC[/]",
-            f"[dim]USD Vol [/] [bright_yellow]${volume_usd:,.2f}[/]",
-            f"[dim]Avg Size[/] [bright_cyan]{_fmt_btc(s['avg_trade_size'])} BTC[/]",
-        ]
-
-        if s["largest_trade"]:
-            lt = s["largest_trade"]
-            side_color = "bright_green" if lt["side"] == "buy" else "bright_red"
-            lines.append(
-                f"[dim]Largest [/] [{side_color}]{lt['side'].capitalize()}[/] "
-                f"[bright_cyan]{_fmt_btc(lt['size'])} BTC[/]"
-            )
+        self.session_widget.update_session(s, elapsed)
+        self.trade_stats_widget.update_trade_stats(s)
+        self.activity_widget.update_activity(s, min_size, self.audio_enabled)
 
         msg_age = time.time() - self._last_msg_time if self._last_msg_time else None
         if msg_age is None:
@@ -387,21 +409,8 @@ class BTCBeeperApp(App):
         else:
             conn_status = f"[bright_yellow]{msg_age:.0f}s ago[/]"
 
-        lines.extend([
-            "",
-            "[dim]─── ACTIVITY ───────[/]",
-            f"[dim]TPS     [/] {s['tps']:.2f}  [dim]peak[/] {s['highest_tps']:.2f}",
-            f"[dim]Filter  [/] ≥ {min_size} BTC",
-            "[dim]Audio   [/] " + ("[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"),
-            f"[dim]Feed    [/] {conn_status}",
-        ])
-
-        errors_p = s.get("parse_errors", 0)
-        errors_i = s.get("invalid_trades", 0)
-        if errors_p or errors_i:
-            lines.append(f"[dim]Errors  [/] [bright_red]{errors_p} parse  {errors_i} invalid[/]")
-
-        self.stats_widget.update("\n".join(lines))
+        self.status_header.feed_status = conn_status
+        self.status_header.audio_status = "[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"
 
         filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
         self._update_trades_table(filtered[-TRADES_TABLE_SIZE:])

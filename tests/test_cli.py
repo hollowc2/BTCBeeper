@@ -29,10 +29,8 @@ class TestProcessMessage:
 
     def test_error_message_updates_widget(self, btc_app, sample_error_message):
         btc_app._process_message(json.dumps(sample_error_message))
-        btc_app.stats_widget.update.assert_called()
-        call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "[Error]:" in call_args
-        assert "Test error message" in call_args
+        assert "[Error]:" in btc_app.status_header.feed_status
+        assert "Test error message" in btc_app.status_header.feed_status
 
     def test_invalid_json_tracked_as_parse_error(self, btc_app):
         btc_app._handle_trade = MagicMock()
@@ -413,26 +411,31 @@ class TestRefreshStats:
         btc_app.refresh_stats()
         btc_app.price_widget.update_price.assert_called_with(50000.0)
 
-    def test_refresh_updates_stats_widget(self, btc_app):
-        btc_app.stats = {
-            "total_trades": 100,
-            "last_price": 50000.0,
-            "session_volume": 50.5,
-            "avg_trade_size": 0.505,
-            "largest_trade": {"side": "buy", "size": 5.0, "price": 49000.0},
-            "tps": 2.5,
-            "highest_tps": 5.0,
-        }
+    def test_refresh_updates_session_widget(self, btc_app):
+        btc_app.stats["total_trades"] = 100
+        btc_app.stats["session_volume"] = 50.5
         btc_app.refresh_stats()
+        btc_app.session_widget.update_session.assert_called_once()
+        call = btc_app.session_widget.update_session.call_args[0]
+        assert call[0] is btc_app.stats
+        assert isinstance(call[1], int)
 
-        call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "100" in call_args
-        assert "50.5 BTC" in call_args
-        assert "2.50" in call_args
-        assert "5.00" in call_args
-        assert "0.505 BTC" in call_args
-        assert "Largest" in call_args
-        assert "Audio" in call_args
+    def test_refresh_updates_trade_stats_widget(self, btc_app):
+        btc_app.stats["total_trades"] = 100
+        btc_app.stats["session_volume"] = 50.5
+        btc_app.refresh_stats()
+        btc_app.trade_stats_widget.update_trade_stats.assert_called_once()
+        stats_arg = btc_app.trade_stats_widget.update_trade_stats.call_args[0][0]
+        assert stats_arg["total_trades"] == 100
+
+    def test_refresh_updates_activity_widget(self, btc_app):
+        btc_app.filter_index = 1  # 0.001 BTC
+        btc_app.audio_enabled = False
+        btc_app.refresh_stats()
+        btc_app.activity_widget.update_activity.assert_called_once()
+        args = btc_app.activity_widget.update_activity.call_args[0]
+        assert args[1] == 0.001
+        assert args[2] is False
 
     def test_refresh_filters_trades_table(self, btc_app):
         btc_app.filter_index = 2  # 0.01 BTC
@@ -678,7 +681,7 @@ class TestErrorTracking:
 
 
 class TestOutputVerification:
-    def test_stats_widget_format_complete(self, btc_app):
+    def test_trade_stats_widget_receives_correct_stats(self, btc_app):
         btc_app.stats = {
             "total_trades": 42,
             "last_price": 65432.10,
@@ -693,16 +696,38 @@ class TestOutputVerification:
 
         btc_app.refresh_stats()
 
-        call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "42" in call_args
-        assert "123.456789 BTC" in call_args
-        assert "3.50" in call_args
-        assert "7.20" in call_args
-        assert "2.939447 BTC" in call_args
-        assert "0.01 BTC" in call_args
-        assert "Sell" in call_args
-        assert "10.5 BTC" in call_args
-        assert "OFF" in call_args
+        stats_arg = btc_app.trade_stats_widget.update_trade_stats.call_args[0][0]
+        assert stats_arg["total_trades"] == 42
+        assert stats_arg["session_volume"] == 123.456789
+        assert stats_arg["avg_trade_size"] == pytest.approx(2.939447, rel=1e-6)
+        assert stats_arg["largest_trade"]["side"] == "sell"
+        assert stats_arg["largest_trade"]["size"] == 10.5
+
+    def test_activity_widget_receives_correct_args(self, btc_app):
+        btc_app.stats = {
+            "total_trades": 42,
+            "last_price": 65432.10,
+            "session_volume": 123.456789,
+            "avg_trade_size": 2.939447,
+            "largest_trade": {"side": "sell", "size": 10.5, "price": 65000.0},
+            "tps": 3.5,
+            "highest_tps": 7.2,
+        }
+        btc_app.audio_enabled = False
+        btc_app.filter_index = 2  # 0.01
+
+        btc_app.refresh_stats()
+
+        args = btc_app.activity_widget.update_activity.call_args[0]
+        assert args[1] == 0.01
+        assert args[2] is False
+        assert args[0]["tps"] == 3.5
+        assert args[0]["highest_tps"] == 7.2
+
+    def test_status_header_audio_status_updated(self, btc_app):
+        btc_app.audio_enabled = False
+        btc_app.refresh_stats()
+        assert btc_app.status_header.audio_status == "[bright_red]OFF[/]"
 
     def test_trades_table_row_format(self, btc_app):
         btc_app.recent_trades = [
@@ -731,9 +756,8 @@ class TestOutputVerification:
         error_msg = {"type": "error", "message": "Rate limit exceeded"}
         btc_app._process_message(json.dumps(error_msg))
 
-        call_args = btc_app.stats_widget.update.call_args[0][0]
-        assert "[Error]:" in call_args
-        assert "Rate limit exceeded" in call_args
+        assert "[Error]:" in btc_app.status_header.feed_status
+        assert "Rate limit exceeded" in btc_app.status_header.feed_status
 
 
 class TestPriceWidgetAnimation:

@@ -146,8 +146,7 @@ class TestWebSocketLoop:
             with patch('asyncio.sleep', new_callable=AsyncMock):
                 await btc_app._ws_loop()
 
-        calls = btc_app.stats_widget.update.call_args_list
-        assert any("[Connection Error]" in str(call) for call in calls)
+        assert "DISCONNECTED" in btc_app.status_header.feed_status
 
     @pytest.mark.asyncio
     async def test_max_reconnect_reached_shows_failure(self, btc_app):
@@ -158,8 +157,7 @@ class TestWebSocketLoop:
             with patch('asyncio.sleep', new_callable=AsyncMock):
                 await btc_app._ws_loop()
 
-        calls = btc_app.stats_widget.update.call_args_list
-        assert any("[Connection Failed]" in str(call) for call in calls)
+        assert "DISCONNECTED" in btc_app.status_header.feed_status
 
 
 class TestWebSocketMessageTypes:
