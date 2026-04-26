@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 CLICK_SOUND_PATH = os.getenv("BTCBEEPER_SOUND_PATH", "data/sounds/geiger_click7.wav")
 SELL_SOUND_PATH = os.getenv("BTCBEEPER_SELL_SOUND_PATH", "data/sounds/geiger_click4.wav")
 COINBASE_WS_URL = os.getenv("COINBASE_WS_URL", "wss://ws-feed.exchange.coinbase.com")
+PRODUCT_ID = "BTC-USD"
 
 TPS_WINDOW = 10
 MAX_RECENT_TRADES = 1000
@@ -155,6 +156,7 @@ class PriceWidget(Static):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.anim_timer: Timer | None = None
+        self._anim_direction: str = ""
 
     def update_price(self, price: float) -> None:
         self.update(f"\n[bold bright_yellow on black]${price:,.2f}[/]")
@@ -163,11 +165,11 @@ class PriceWidget(Static):
         self.add_class(f"price-{direction}")
         if self.anim_timer:
             self.anim_timer.stop()
+        self._anim_direction = direction
         self.anim_timer = self.set_timer(ANIMATION_DURATION, self._reset_animation)
 
     def _reset_animation(self) -> None:
-        self.remove_class("price-up")
-        self.remove_class("price-down")
+        self.remove_class(f"price-{self._anim_direction}")
 
 class HeatmapWidget(Static):
     LABELS = ["< 0.0001", "0.0001\u20130.001", "0.001\u20130.01", "0.01\u20130.1", "0.1\u20131.0", "\u2265 1.0"]
@@ -233,8 +235,8 @@ class BTCBeeperApp(App):
         self.recent_trades: list[dict] = []
         self.trade_timestamps: list[float] = []
         self._expanded_trade: dict | None = None
-        self._detail_row_keys: list = []
         self._trade_row_map: dict = {}
+        self._detail_row_keys: list = []
         self._last_msg_time: float = 0.0
 
     def compose(self) -> ComposeResult:
@@ -268,7 +270,7 @@ class BTCBeeperApp(App):
         reconnect_attempts = 0
         subscribe_msg = json.dumps({
             "type": "subscribe",
-            "product_ids": ["BTC-USD"],
+            "product_ids": [PRODUCT_ID],
             "channels": ["matches", "ticker", "heartbeat"],
         })
 
@@ -303,7 +305,7 @@ class BTCBeeperApp(App):
             logger.debug("JSON parse error: %s", e)
             return
 
-        if data.get("product_id") not in ["BTC-USD", None]:
+        if data.get("product_id") not in [PRODUCT_ID, None]:
             return
 
         msg_type = data.get("type", "")
@@ -440,16 +442,26 @@ class BTCBeeperApp(App):
         self.heatmap_widget.update_heatmap(self._compute_heatmap_buckets())
 
     def _update_trades_table(self, trades: list[dict]) -> None:
-        if self._expanded_trade:
-            return
         self.trades_table.clear()
         self._trade_row_map.clear()
+        self._detail_row_keys.clear()
         for i, t in enumerate(reversed(trades)):
             rk = self.trades_table.add_row(
                 t["side"].capitalize(), f"${t['price']:.2f}", f"{t['size']:.6f}",
                 key=str(i)
             )
             self._trade_row_map[rk] = t
+            # Show detail rows for expanded trade
+            if t is self._expanded_trade:
+                detail_data = [
+                    ("", "", f"  Trade ID:  {t.get('trade_id', 'N/A')}"),
+                    ("", "", f"  Time:      {t.get('time', 'N/A')}"),
+                    ("", "", f"  Maker ID:  {t.get('maker_order_id', 'N/A')}"),
+                    ("", "", f"  Taker ID:  {t.get('taker_order_id', 'N/A')}"),
+                ]
+                for j, row in enumerate(detail_data):
+                    dk = self.trades_table.add_row(*row, key=f"detail-{i}-{j}")
+                    self._detail_row_keys.append(dk)
 
     def _check_bot_activity(self, trades: list[dict]) -> None:
         size_counts: dict[float, int] = {}

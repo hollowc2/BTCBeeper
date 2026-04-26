@@ -1,8 +1,15 @@
 import json
+import sys
 import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Add src directory to path for cli module imports
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+import cli as cli_module
 
 
 class TestProcessMessage:
@@ -799,16 +806,21 @@ class TestPriceWidgetAnimation:
 
         old_timer.stop.assert_called_once()
 
-    def test_reset_animation_removes_classes(self, mock_pygame):
+    def test_reset_animation_removes_correct_class(self, mock_pygame):
         from cli import PriceWidget
         widget = PriceWidget()
         widget.remove_class = MagicMock()
-
+        
+        # Test up direction
+        widget._anim_direction = "up"
         widget._reset_animation()
-
-        assert widget.remove_class.call_count == 2
-        widget.remove_class.assert_any_call("price-up")
-        widget.remove_class.assert_any_call("price-down")
+        widget.remove_class.assert_called_with("price-up")
+        
+        # Test down direction
+        widget.remove_class.reset_mock()
+        widget._anim_direction = "down"
+        widget._reset_animation()
+        widget.remove_class.assert_called_with("price-down")
 
 
 class TestIntegration:

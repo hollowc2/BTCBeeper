@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from scipy.io import wavfile
@@ -19,7 +20,18 @@ CLICK_VARIATIONS = [
     {"filename": "geiger_click10.wav", "duration": 0.004, "frequency": 3500, "sine_amp": 0.2, "noise_amp": 0.4, "decay": 10, "double": True},
 ]
 
-def generate_click_sound(params, sample_rate=SAMPLE_RATE):
+
+def generate_click_sound(params: dict[str, Any], sample_rate: int = SAMPLE_RATE) -> np.ndarray:
+    """Generate a click sound from parameters.
+    
+    Args:
+        params: Dictionary with keys: filename, duration, frequency, sine_amp,
+                noise_amp, decay, double
+        sample_rate: Audio sample rate (default 44100)
+    
+    Returns:
+        numpy array of int16 audio samples
+    """
     t = np.linspace(0, params["duration"], int(sample_rate * params["duration"]), False)
 
     sine_wave = params["sine_amp"] * np.sin(2 * np.pi * params["frequency"] * t) if params["frequency"] > 0 else np.zeros_like(t)
