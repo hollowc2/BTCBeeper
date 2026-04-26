@@ -451,17 +451,19 @@ class BTCBeeperApp(App):
                 key=str(i)
             )
             self._trade_row_map[rk] = t
-            # Show detail rows for expanded trade
             if t is self._expanded_trade:
-                detail_data = [
-                    ("", "", f"  Trade ID:  {t.get('trade_id', 'N/A')}"),
-                    ("", "", f"  Time:      {t.get('time', 'N/A')}"),
-                    ("", "", f"  Maker ID:  {t.get('maker_order_id', 'N/A')}"),
-                    ("", "", f"  Taker ID:  {t.get('taker_order_id', 'N/A')}"),
-                ]
-                for j, row in enumerate(detail_data):
-                    dk = self.trades_table.add_row(*row, key=f"detail-{i}-{j}")
-                    self._detail_row_keys.append(dk)
+                self._add_detail_rows(t, i)
+
+    def _add_detail_rows(self, trade: dict, trade_index: int) -> None:
+        detail_data = [
+            ("", "", f"  Trade ID:  {trade.get('trade_id', 'N/A')}"),
+            ("", "", f"  Time:      {trade.get('time', 'N/A')}"),
+            ("", "", f"  Maker ID:  {trade.get('maker_order_id', 'N/A')}"),
+            ("", "", f"  Taker ID:  {trade.get('taker_order_id', 'N/A')}"),
+        ]
+        for j, row in enumerate(detail_data):
+            dk = self.trades_table.add_row(*row, key=f"detail-{trade_index}-{j}")
+            self._detail_row_keys.append(dk)
 
     def _check_bot_activity(self, trades: list[dict]) -> None:
         size_counts: dict[float, int] = {}
@@ -547,13 +549,4 @@ class BTCBeeperApp(App):
             )
             self._trade_row_map[rk] = t
             if t is self._expanded_trade:
-                d = self._expanded_trade
-                detail_data = [
-                    ("", "", f"  Trade ID:  {d.get('trade_id', 'N/A')}"),
-                    ("", "", f"  Time:      {d.get('time', 'N/A')}"),
-                    ("", "", f"  Maker ID:  {d.get('maker_order_id', 'N/A')}"),
-                    ("", "", f"  Taker ID:  {d.get('taker_order_id', 'N/A')}"),
-                ]
-                for j, row in enumerate(detail_data):
-                    dk = self.trades_table.add_row(*row, key=f"detail-{i}-{j}")
-                    self._detail_row_keys.append(dk)
+                self._add_detail_rows(t, i)
