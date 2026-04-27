@@ -68,10 +68,11 @@ ActivityWidget {
     height: 1fr;
 }
 
-#heatmap {
-    height: 8;
-    padding: 1;
-    border-bottom: solid #2d4f6e;
+HeatmapWidget {
+    border: round #3a7bd5;
+    border-title-color: #7aa2f7;
+    padding: 0 1;
+    height: auto;
 }
 
 #bot-banner {

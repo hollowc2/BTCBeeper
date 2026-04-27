@@ -1,11 +1,14 @@
 import asyncio
+import bisect
 import json
 import logging
 import os
 import time
+from collections import deque
 
 import pygame
 import websockets
+from rich.text import Text
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
@@ -30,12 +33,10 @@ MAX_RECONNECT_ATTEMPTS = 5
 RECONNECT_DELAY = 2
 BOT_DETECTION_THRESHOLD = 5
 BOT_BANNER_DURATION = 5
+BOT_DETECTION_WINDOW = 50
 TRADES_TABLE_SIZE = 16
 STATS_REFRESH_INTERVAL = 0.5
 ANIMATION_DURATION = 0.5
-
-click_sound = None
-click_sound_sell = None
 
 
 class StatusHeader(Static):
@@ -67,7 +68,7 @@ class StatusHeader(Static):
 
     def _refresh_display(self) -> None:
         self.update(
-            f"[bold bright_cyan]\u20bf BTCBeeper[/]"
+            f"[bold bright_cyan]₿ BTCBeeper[/]"
             f"  [dim]Feed:[/] {self._feed_status}"
             f"  [dim]Audio:[/] {self._audio_status}"
             f"  [dim]BTC-USD[/]"
@@ -80,23 +81,28 @@ class SessionWidget(Static):
 
     def update_session(self, stats: dict, elapsed_secs: int) -> None:
         uptime = f"{elapsed_secs // 3600:02d}:{(elapsed_secs % 3600) // 60:02d}:{elapsed_secs % 60:02d}"
-        session_high = stats.get("session_high", 0.0)
-        session_low = stats.get("session_low", float("inf"))
+        session_high = stats.get("session_high")
+        session_low = stats.get("session_low")
+        high_line = (
+            f"[dim]High  [/] [bright_yellow]${session_high:,.2f}[/]"
+            if session_high is not None
+            else "[dim]High  [/] [dim]N/A[/]"
+        )
         low_line = (
             f"[dim]Low   [/] [bright_yellow]${session_low:,.2f}[/]"
-            if session_low != float("inf")
+            if session_low is not None
             else "[dim]Low   [/] [dim]N/A[/]"
         )
         lines = [
             f"[dim]Uptime[/] {uptime}",
-            f"[dim]High  [/] [bright_yellow]${session_high:,.2f}[/]",
+            high_line,
             low_line,
         ]
-        if session_high > 0 and session_low != float("inf"):
+        if session_high is not None and session_low is not None:
             lines.append(f"[dim]Range [/] [bright_white]${session_high - session_low:,.2f}[/]")
         volume_usd = stats.get("volume_usd", 0.0)
         session_volume = stats.get("session_volume", 0.0)
-        if session_volume > 0:
+        if stats.get("total_trades", 0) >= 10 and session_volume > 0:
             vwap = volume_usd / session_volume
             vwap_color = "bright_green" if stats.get("last_price", 0) >= vwap else "bright_red"
             lines.append(f"[dim]VWAP  [/] [{vwap_color}]${vwap:,.2f}[/]")
@@ -133,7 +139,7 @@ class ActivityWidget(Static):
     def update_activity(self, stats: dict, min_size: float, audio_enabled: bool, recent_filtered: list[dict] | None = None) -> None:
         lines = [
             f"[dim]TPS   [/] {stats['tps']:.2f}  [dim]peak[/] {stats['highest_tps']:.2f}",
-            f"[dim]Filter[/] \u2265 {min_size} BTC",
+            f"[dim]Filter[/] ≥ {min_size} BTC",
         ]
         if recent_filtered:
             buy_count = sum(1 for t in recent_filtered if t["side"] == "buy")
@@ -172,7 +178,10 @@ class PriceWidget(Static):
         self.remove_class(f"price-{self._anim_direction}")
 
 class HeatmapWidget(Static):
-    LABELS = ["< 0.0001", "0.0001\u20130.001", "0.001\u20130.01", "0.01\u20130.1", "0.1\u20131.0", "\u2265 1.0"]
+    LABELS = ["< 0.0001", "0.0001–0.001", "0.001–0.01", "0.01–0.1", "0.1–1.0", "≥ 1.0"]
+
+    def on_mount(self) -> None:
+        self.border_title = "SIZE DISTRIBUTION"
 
     def update_heatmap(self, counts: list[int]) -> None:
         max_count = max(counts) or 1
@@ -183,7 +192,7 @@ class HeatmapWidget(Static):
             else:
                 ratio = count / max_count
                 bar_width = int(ratio * 28)
-                bar = "\u2588" * bar_width
+                bar = "█" * bar_width
                 if ratio < 0.25:
                     color = "dark_cyan"
                 elif ratio < 0.5:
@@ -206,12 +215,14 @@ class BTCBeeperApp(App):
     BINDINGS = [
         Binding("q", "quit",         "Quit"),
         Binding("a", "toggle_audio", "Audio on/off"),
-        Binding("[", "filter_down",  "Filter \u2190", priority=True),
-        Binding("]", "filter_up",    "Filter \u2192", priority=True),
+        Binding("[", "filter_down",  "Filter ←", priority=True),
+        Binding("]", "filter_up",    "Filter →", priority=True),
     ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, click_sound=None, click_sound_sell=None, **kwargs):
+        super().__init__(**kwargs)
+        self._click_sound = click_sound
+        self._click_sound_sell = click_sound_sell
         self.bot_banner_timer: Timer | None = None
         self.filter_index = 0
         self.audio_enabled = True
@@ -226,18 +237,19 @@ class BTCBeeperApp(App):
             "parse_errors": 0,
             "invalid_trades": 0,
             "session_start": time.time(),
-            "session_high": 0.0,
-            "session_low": float("inf"),
+            "session_high": None,
+            "session_low": None,
             "volume_usd": 0.0,
             "buy_volume": 0.0,
             "sell_volume": 0.0,
         }
-        self.recent_trades: list[dict] = []
-        self.trade_timestamps: list[float] = []
+        self.recent_trades: deque[dict] = deque(maxlen=MAX_RECENT_TRADES)
+        self.trade_timestamps: deque[float] = deque()
         self._expanded_trade: dict | None = None
         self._trade_row_map: dict = {}
         self._detail_row_keys: list = []
         self._last_msg_time: float = 0.0
+        self._trades_dirty: bool = False
 
     def compose(self) -> ComposeResult:
         self.status_header = StatusHeader(id="status-header")
@@ -292,7 +304,8 @@ class BTCBeeperApp(App):
                 logger.warning("Connection error: %s (attempt %d/%d)", e, reconnect_attempts, MAX_RECONNECT_ATTEMPTS)
                 self.status_header.feed_status = f"[bright_red]ERR {reconnect_attempts}/{MAX_RECONNECT_ATTEMPTS}[/]"
                 if reconnect_attempts < MAX_RECONNECT_ATTEMPTS:
-                    await asyncio.sleep(RECONNECT_DELAY)
+                    delay = min(RECONNECT_DELAY * 2 ** reconnect_attempts, 60)
+                    await asyncio.sleep(delay)
                 else:
                     logger.error("Max reconnection attempts reached, giving up")
                     self.status_header.feed_status = "[bright_red]DISCONNECTED[/]"
@@ -345,8 +358,7 @@ class BTCBeeperApp(App):
 
         # All trades feed the heatmap via recent_trades
         self.recent_trades.append(trade)
-        if len(self.recent_trades) > MAX_RECENT_TRADES:
-            self.recent_trades.pop(0)
+        self._trades_dirty = True
 
         # Stats, audio, and price animation are gated by the size filter
         if trade_size >= self.get_min_trade_size():
@@ -363,9 +375,9 @@ class BTCBeeperApp(App):
             if not largest or trade["size"] > largest["size"]:
                 self.stats["largest_trade"] = trade.copy()
 
-            if trade_price > self.stats["session_high"]:
+            if self.stats["session_high"] is None or trade_price > self.stats["session_high"]:
                 self.stats["session_high"] = trade_price
-            if trade_price < self.stats["session_low"]:
+            if self.stats["session_low"] is None or trade_price < self.stats["session_low"]:
                 self.stats["session_low"] = trade_price
             self.stats["volume_usd"] += trade_size * trade_price
             if trade["side"] == "buy":
@@ -386,14 +398,14 @@ class BTCBeeperApp(App):
     def _update_tps(self) -> None:
         now = time.time()
         while self.trade_timestamps and now - self.trade_timestamps[0] > TPS_WINDOW:
-            self.trade_timestamps.pop(0)
+            self.trade_timestamps.popleft()
         self.stats["tps"] = len(self.trade_timestamps) / TPS_WINDOW
         self.stats["highest_tps"] = max(self.stats["highest_tps"], self.stats["tps"])
 
     def _play_click(self, side: str = "buy") -> None:
         if not self.audio_enabled:
             return
-        sound = click_sound_sell if side == "sell" else click_sound
+        sound = self._click_sound_sell if side == "sell" else self._click_sound
         if sound:
             sound.play()
 
@@ -404,11 +416,13 @@ class BTCBeeperApp(App):
     def action_filter_down(self) -> None:
         if self.filter_index > 0:
             self.filter_index -= 1
+            self._trades_dirty = True
             self.refresh_stats()
 
     def action_filter_up(self) -> None:
         if self.filter_index < len(self.FILTER_SIZES) - 1:
             self.filter_index += 1
+            self._trades_dirty = True
             self.refresh_stats()
 
     def get_min_trade_size(self) -> float:
@@ -421,7 +435,7 @@ class BTCBeeperApp(App):
         self.price_widget.update_price(s["last_price"])
 
         elapsed = int(time.time() - s.get("session_start", time.time()))
-        filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
+        filtered = [t for t in list(self.recent_trades)[-100:] if t["size"] >= min_size]
         self.session_widget.update_session(s, elapsed)
         self.trade_stats_widget.update_trade_stats(s)
         self.activity_widget.update_activity(s, min_size, self.audio_enabled, filtered[-TRADES_TABLE_SIZE:])
@@ -438,16 +452,22 @@ class BTCBeeperApp(App):
         self.status_header.audio_status = "[bright_green]ON[/]" if self.audio_enabled else "[bright_red]OFF[/]"
 
         self._update_trades_table(filtered[-TRADES_TABLE_SIZE:])
-        self._check_bot_activity(filtered[-TRADES_TABLE_SIZE:])
+        self._check_bot_activity(filtered[-BOT_DETECTION_WINDOW:])
         self.heatmap_widget.update_heatmap(self._compute_heatmap_buckets())
 
     def _update_trades_table(self, trades: list[dict]) -> None:
+        if not self._trades_dirty:
+            return
+        self._trades_dirty = False
         self.trades_table.clear()
         self._trade_row_map.clear()
         self._detail_row_keys.clear()
         for i, t in enumerate(reversed(trades)):
+            color = "bright_green" if t["side"] == "buy" else "bright_red"
             rk = self.trades_table.add_row(
-                t["side"].capitalize(), f"${t['price']:.2f}", f"{t['size']:.6f}",
+                Text(t["side"].capitalize(), style=color),
+                Text(f"${t['price']:.2f}", style=color),
+                Text(f"{t['size']:.6f}", style=color),
                 key=str(i)
             )
             self._trade_row_map[rk] = t
@@ -492,21 +512,9 @@ class BTCBeeperApp(App):
             self.bot_banner_timer = None
 
     def _compute_heatmap_buckets(self) -> list[int]:
-        buckets = [0] * 6
+        buckets = [0] * (len(self.FILTER_SIZES) + 1)
         for t in self.recent_trades:
-            size = t["size"]
-            if size < self.FILTER_SIZES[0]:
-                buckets[0] += 1
-            elif size < self.FILTER_SIZES[1]:
-                buckets[1] += 1
-            elif size < self.FILTER_SIZES[2]:
-                buckets[2] += 1
-            elif size < self.FILTER_SIZES[3]:
-                buckets[3] += 1
-            elif size < self.FILTER_SIZES[4]:
-                buckets[4] += 1
-            else:
-                buckets[5] += 1
+            buckets[bisect.bisect_right(self.FILTER_SIZES, t["size"])] += 1
         return buckets
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
@@ -535,7 +543,7 @@ class BTCBeeperApp(App):
 
     def _rebuild_table_with_detail(self) -> None:
         min_size = self.get_min_trade_size()
-        filtered = [t for t in self.recent_trades[-100:] if t["size"] >= min_size]
+        filtered = [t for t in list(self.recent_trades)[-100:] if t["size"] >= min_size]
         trades = filtered[-TRADES_TABLE_SIZE:]
 
         self.trades_table.clear()
@@ -543,8 +551,11 @@ class BTCBeeperApp(App):
         self._detail_row_keys.clear()
 
         for i, t in enumerate(reversed(trades)):
+            color = "bright_green" if t["side"] == "buy" else "bright_red"
             rk = self.trades_table.add_row(
-                t["side"].capitalize(), f"${t['price']:.2f}", f"{t['size']:.6f}",
+                Text(t["side"].capitalize(), style=color),
+                Text(f"${t['price']:.2f}", style=color),
+                Text(f"{t['size']:.6f}", style=color),
                 key=str(i)
             )
             self._trade_row_map[rk] = t

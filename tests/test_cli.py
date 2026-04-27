@@ -1,6 +1,7 @@
 import json
 import sys
 import time
+from collections import deque
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -226,14 +227,10 @@ class TestUpdateTPS:
     def test_old_timestamps_removed(self, btc_app, frozen_time):
         from cli import TPS_WINDOW
 
-        # Add old timestamps (outside window)
-        btc_app.trade_timestamps = [
+        btc_app.trade_timestamps = deque([
             frozen_time - TPS_WINDOW - 5,
             frozen_time - TPS_WINDOW - 3,
             frozen_time - TPS_WINDOW - 1,
-        ]
-        # Add recent timestamps (inside window)
-        btc_app.trade_timestamps.extend([
             frozen_time - 5,
             frozen_time - 3,
         ])
@@ -247,7 +244,7 @@ class TestUpdateTPS:
         assert btc_app.stats["tps"] == pytest.approx(expected_tps, rel=1e-6)
 
     def test_empty_timestamps_zero_tps(self, btc_app, frozen_time):
-        btc_app.trade_timestamps = []
+        btc_app.trade_timestamps = deque()
 
         with patch('time.time', return_value=frozen_time):
             btc_app._update_tps()
@@ -259,16 +256,16 @@ class TestUpdateTPS:
 
         with patch('time.time', return_value=frozen_time):
             # First batch: 5 trades
-            btc_app.trade_timestamps = [frozen_time - i for i in range(5)]
+            btc_app.trade_timestamps = deque([frozen_time - i for i in range(5)])
             btc_app._update_tps()
             first_tps = btc_app.stats["tps"]
 
             # Second batch: 10 trades (higher)
-            btc_app.trade_timestamps = [frozen_time - i * 0.5 for i in range(10)]
+            btc_app.trade_timestamps = deque([frozen_time - i * 0.5 for i in range(10)])
             btc_app._update_tps()
 
             # Third batch: 3 trades (lower)
-            btc_app.trade_timestamps = [frozen_time - i for i in range(3)]
+            btc_app.trade_timestamps = deque([frozen_time - i for i in range(3)])
             btc_app._update_tps()
 
         # Highest should be from second batch
@@ -280,7 +277,7 @@ class TestUpdateTPS:
         from cli import TPS_WINDOW
 
         # Timestamp exactly at the boundary (10 seconds old)
-        btc_app.trade_timestamps = [frozen_time - TPS_WINDOW]
+        btc_app.trade_timestamps = deque([frozen_time - TPS_WINDOW])
 
         with patch('time.time', return_value=frozen_time):
             btc_app._update_tps()
@@ -291,7 +288,7 @@ class TestUpdateTPS:
 
     def test_timestamps_just_outside_boundary(self, btc_app, frozen_time):
         from cli import TPS_WINDOW
-        btc_app.trade_timestamps = [frozen_time - TPS_WINDOW - 0.001]
+        btc_app.trade_timestamps = deque([frozen_time - TPS_WINDOW - 0.001])
 
         with patch('time.time', return_value=frozen_time):
             btc_app._update_tps()
@@ -464,6 +461,7 @@ class TestRefreshStats:
             {"price": 50000.0, "size": 0.02, "side": "sell"},  # Included
             {"price": 50000.0, "size": 0.01, "side": "buy"},   # Included
         ]
+        btc_app._trades_dirty = True
         btc_app.refresh_stats()
 
         assert btc_app.trades_table.add_row.call_count == 2
@@ -471,9 +469,8 @@ class TestRefreshStats:
 
 class TestPlayClick:
     def test_click_played_when_enabled(self, btc_app):
-        import cli as cli_module
         mock_sound = MagicMock()
-        cli_module.click_sound = mock_sound
+        btc_app._click_sound = mock_sound
         btc_app.audio_enabled = True
 
         btc_app._play_click()
@@ -481,9 +478,8 @@ class TestPlayClick:
         mock_sound.play.assert_called_once()
 
     def test_click_not_played_when_disabled(self, btc_app):
-        import cli as cli_module
         mock_sound = MagicMock()
-        cli_module.click_sound = mock_sound
+        btc_app._click_sound = mock_sound
         btc_app.audio_enabled = False
 
         btc_app._play_click()
@@ -491,8 +487,7 @@ class TestPlayClick:
         mock_sound.play.assert_not_called()
 
     def test_no_crash_when_sound_not_loaded(self, btc_app):
-        import cli as cli_module
-        cli_module.click_sound = None
+        btc_app._click_sound = None
         btc_app.audio_enabled = True
 
         btc_app._play_click()
@@ -756,12 +751,15 @@ class TestOutputVerification:
             {"price": 49999.99, "size": 1.0, "side": "sell"},
         ]
         btc_app.filter_index = 0
+        btc_app._trades_dirty = True
 
         btc_app.refresh_stats()
 
         calls = btc_app.trades_table.add_row.call_args_list
-        assert calls[0][0] == ("Sell", "$49999.99", "1.000000")
-        assert calls[1][0] == ("Buy", "$50000.00", "0.123456")
+        assert tuple(v.plain for v in calls[0][0]) == ("Sell", "$49999.99", "1.000000")
+        assert tuple(v.plain for v in calls[1][0]) == ("Buy", "$50000.00", "0.123456")
+        assert calls[0][0][0].style == "bright_red"
+        assert calls[1][0][0].style == "bright_green"
 
     def test_bot_banner_message_format(self, btc_app):
         trades = [{"price": 50000.0, "size": 0.5, "side": "buy"} for _ in range(6)]
