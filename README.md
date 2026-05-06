@@ -1,14 +1,21 @@
 # BTCBeeper
 
-<div align="center">
-  <img src="data/images/icon.png" alt="BTCBeeper" width="500"/>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin: 16px 0 28px 0;">
+  <div style="flex: 1 1 320px; max-width: 640px; text-align: left; font-size: 1.08em; line-height: 1.5;">
+    Live BTC/USD trades from Coinbase, stats in the terminal, a click for every trade.
+  </div>
+  <div style="flex: 0 0 auto; text-align: right;">
+    <img src="data/images/icon.png" alt="BTCBeeper" style="width: 260px; max-width: 42vw; height: auto;"/>
+  </div>
 </div>
 
-Live BTC/USD trades from Coinbase, stats in the terminal, a click for every trade.
+<p align="center">
+  <img src="data/images/btcbeeper.jpg" alt="BTCBeeper terminal screenshot" width="100%"/>
+</p>
 
-![CLI](data/images/btcbeeper.jpg)
-
-![Demo](data/images/btcbeeper.gif)
+<p align="center">
+  <img src="data/images/btcbeeper.gif" alt="BTCBeeper demo animation" width="100%"/>
+</p>
 
 ## Install
 
@@ -48,13 +55,16 @@ python -m src.main
 
 ## Sounds
 
-10 click variations in `data/sounds/`. Default is `geiger_click7.wav` (buy) and `geiger_click4.wav` (sell). Override via env vars:
+There are 10 click variations in `data/sounds/`. Defaults are `geiger_click7.wav` for buys and `geiger_click4.wav` for sells.
+
+Override the sound path with:
 
 ```bash
 BTCBEEPER_SOUND_PATH=data/sounds/geiger_click1.wav python -m src.main
 ```
 
-To regenerate sounds:
+To regenerate the sound set:
+
 ```bash
 pip install numpy scipy
 python src/click_generator.py
