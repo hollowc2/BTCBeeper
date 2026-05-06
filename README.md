@@ -1,11 +1,10 @@
-# BTCBeeper
-
-<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px; margin: 16px 0 28px 0;">
-  <div style="flex: 1 1 320px; max-width: 640px; text-align: left; font-size: 1.08em; line-height: 1.5;">
-    Live BTC/USD trades from Coinbase, stats in the terminal, a click for every trade.
+<div style="margin: 16px 0 28px 0;">
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <img src="data/images/icon.png" alt="BTCBeeper" style="width: 40px; max-width: 10vw; height: auto; flex: 0 0 auto;"/>
+    <h1 style="margin: 0; line-height: 1; font-size: 2rem;">BTCBeeper</h1>
   </div>
-  <div style="flex: 0 0 auto; text-align: right;">
-    <img src="data/images/icon.png" alt="BTCBeeper" style="width: 260px; max-width: 42vw; height: auto;"/>
+  <div style="margin: 6px 0 0 48px; text-align: left; font-size: 1.02em; line-height: 1.4;">
+    Live BTC/USD trades from Coinbase, stats in the terminal, a click for every trade.
   </div>
 </div>
 
