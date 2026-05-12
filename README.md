@@ -8,6 +8,10 @@
   </div>
 </div>
 
+> Archived: BTCBeeper is no longer actively maintained. Its functionality has moved to TapeDesk, which is the current home for the screener, level 2, and time-and-sales workspace.
+
+For migration notes and the final archive summary, see [ARCHIVE.md](ARCHIVE.md).
+
 <p align="center">
   <img src="data/images/btcbeeper.jpg" alt="BTCBeeper terminal screenshot" width="100%"/>
 </p>
